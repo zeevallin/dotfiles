@@ -5,13 +5,17 @@
 ### 1. Clone the repository
 
 ```bash
-$ git clone git@github.com:zeeraw/dotfiles.git ~/.dotfiles
+$ git clone git@github.com:zeeraw/dotfiles.git ~/Dotfiles
 ```
 
-### 2. Set up for your operating system
+### 2. Install mac specific things
 
 ```bash
-$ source ~/.dotfiles/install-osx
+$ source ~/Dotfiles/install-osx
 ```
 
-### 3. Set up for your
+### 3. Install the rest of the shit
+
+```bash
+$ source ~/Dotfiles/install
+```
