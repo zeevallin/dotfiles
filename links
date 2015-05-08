@@ -1,0 +1,10 @@
+# git
+~/.gitconfig, /git/.gitconfig
+~/.gitignore_global, /git/.gitignore_global
+
+# zsh
+~/.zlogin, /zsh/.zlogin
+~/.zlogout, /zsh/.zlogout
+~/.zpreztorc, /zsh/.zpreztorc
+~/.zprofile, /zsh/.zprofile
+~/.zshrc, /zsh/.zshrc
