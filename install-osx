@@ -8,3 +8,9 @@ brew update
 brew install \
   zsh \
   git
+
+if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; then
+  ln -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+else
+  echo "Sublime Text 2 is not installed..."
+fi
