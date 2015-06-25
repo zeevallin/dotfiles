@@ -8,3 +8,6 @@
 ~/.zpreztorc, /zsh/.zpreztorc
 ~/.zprofile, /zsh/.zprofile
 ~/.zshrc, /zsh/.zshrc
+
+# vim
+~/.vimrc, /vim/.vimrc
