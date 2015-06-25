@@ -4,6 +4,7 @@
 #
 # Authors:
 #   Sorin Ionescu <sorin.ionescu@gmail.com>
+#   Philip Vieira <zee@vall.in>
 #
 
 # Source Prezto.
@@ -17,5 +18,3 @@ if [ -x "$(which boot2docker)" ]; then
 else
   echo "[x] boot2docker is not installed"
 fi
-
-# Customize to your needs...
