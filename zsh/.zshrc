@@ -18,3 +18,7 @@ if [ -x "$(which boot2docker)" ]; then
 else
   echo "[x] boot2docker is not installed"
 fi
+
+# vault
+export VAULT_ADDR=https://vault.chatspry.com/
+export VAULT_SKIP_VERIFY=true
