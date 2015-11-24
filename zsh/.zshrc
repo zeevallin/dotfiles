@@ -16,7 +16,7 @@ fi
 if [ $(which go) ] && [ -x $(which go) ]; then
   export GOPATH=$HOME/.go
   export GOBIN=$GOPATH/bin
-  export PATH=$PATH:/usr/local/opt/go/bin:$GOBIN
+  export PATH=$GOBIN:/usr/local/opt/go/bin:$PATH
   if ! [ -d $GOPATH ]; then mkdir -p $GOPATH ;fi
 else
   echo "[x] go-lang not installed"
