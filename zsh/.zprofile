@@ -4,7 +4,17 @@
 #
 # Authors:
 #   Sorin Ionescu <sorin.ionescu@gmail.com>
+#   Philip Vieira <zee@vall.in>
 #
+
+#
+# Limits
+#
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  ulimit -n 65536
+  ulimit -u 2048
+fi
 
 #
 # Browser
