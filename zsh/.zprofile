@@ -12,8 +12,8 @@
 #
 
 if [[ "$OSTYPE" == darwin* ]]; then
-  ulimit -n 65536
-  ulimit -u 2048
+  ulimit -n 65536 >/dev/null 2>&1
+  ulimit -u 2048 >/dev/null 2>&1
 fi
 
 #
