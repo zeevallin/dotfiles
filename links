@@ -11,3 +11,6 @@
 
 # vim
 ~/.vimrc, /vim/.vimrc
+
+# node
+~/.npmrc, /node/.npmrc
