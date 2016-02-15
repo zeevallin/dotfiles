@@ -4,13 +4,27 @@ if [ ! -d /usr/local/.git ]; then
   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
+packages=(
+	zsh
+	git
+	pandoc
+)
+
+# Update homebrew before installing any packages
 brew update
-brew install \
-  zsh \
-  git
+
+for package in ${packages[@]}; do
+    if brew list -1 | grep -q "^${package}\$"; then
+    	# Upgrade already installed package
+    	brew upgrade ${package}
+    else
+    	# Install new package not on the system
+    	brew install ${package}
+    fi
+done
 
 if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; then
-  ln -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+  ln -f -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 else
   echo "Sublime Text 2 is not installed..."
 fi
