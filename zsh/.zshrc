@@ -36,3 +36,7 @@ export VAULT_SKIP_VERIFY=true
 # markdown
 md () { pandoc -s -f markdown -t man $1 | groff -T utf8 -man | less }
 alias markdown=md
+
+# useful tools
+killport () { lsof -i :$1 | sed 1d | awk '{print $2}' | xargs kill -9 }
+
