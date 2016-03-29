@@ -28,3 +28,15 @@ if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; th
 else
   echo "Sublime Text 2 is not installed..."
 fi
+
+sublime_packages="$HOME/Library/Application\ Support/Sublime\ Text\ 2/Packages"
+if [ -d "$sublime_packages/Cloudsdale/"  ]; then
+  echo "Updating Sublime Text Cloudsdale theme..."
+  cwd=$(pwd)
+  cd "$sublime_packages/Cloudsdale/"
+  git pull
+  cd $cwd
+else
+  echo "Installing Sublime Text Cloudsdale theme..."
+  git clone git@github.com:cloudsdaleapp/cloudsdale.subl.git "$sublime_packages/Cloudsdale"
+fi
