@@ -1,3 +1,6 @@
+# ansible
+~/.ansible.cfg, /ansible/.ansible.cfg
+
 # git
 ~/.gitconfig, /git/.gitconfig
 ~/.gitignore_global, /git/.gitignore_global
