@@ -19,5 +19,4 @@
 ~/.npmrc, /node/.npmrc
 
 # subl
-~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Package\ Control.sublime-settings, /subl/package_control.sublime-settings
-~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Preferences.sublime-settings, /subl/preferences.sublime-settings
+~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User, /subl/User

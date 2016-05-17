@@ -6,6 +6,7 @@
 	"installed_packages":
 	[
 		"cloudsdale.subl",
+		"Golang Tools Integration",
 		"Markdown Extended"
 	],
 	"repositories":

@@ -1,0 +1,21 @@
+{
+    "color_scheme": "Packages/cloudsdale.subl/CloudsdaleColourScheme.tmTheme",
+    "draw_white_space": "selection",
+    "folder_exclude_patterns":
+    [
+        "node_modules",
+        ".git",
+        "tmp"
+    ],
+    "font_face": "Monaco",
+    "font_size": 11.0,
+    "ignored_packages":
+    [
+        "Vintage"
+    ],
+    "tab_size": 2,
+    "translate_tabs_to_spaces": true,
+    "trim_automatic_white_space": false,
+    "trim_trailing_white_space_on_save": true,
+    "word_separators": "./\\()\"'-:,.;<>~!@#%^&*|+=[]{}`~?"
+}
