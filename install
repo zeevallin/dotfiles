@@ -2,44 +2,55 @@
 
 DOTFILES=${PWD}
 LINKS="$DOTFILES/links"
+GO_PKGS=(
+	github.com/nsf/gocode
+	github.com/golang/lint/golint
+	golang.org/x/tools/cmd/guru
+	golang.org/x/tools/cmd/goimports
+	golang.org/x/tools/cmd/gorename
+)
 
 if [ ! -d $HOME/.zprezto ]; then
-  git clone --recursive https://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
+	git clone --recursive https://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
 else
-  cd $HOME/.zprezto && \
-    git pull --recurse-submodules && \
-    cd $DOTFILES
+	cd $HOME/.zprezto && \
+		git pull --recurse-submodules && \
+		cd $DOTFILES
 fi
+
+for golang_pkg in ${GO_PKGS[@]}; do
+	go get ${golang_pkg}
+done
 
 echo "Setting up symlinks:"
 
 while read line; do
-  if [[ ! $line == \#* ]] && [ -n "$line" ]; then
-    IFS=","
-    set -- $line
+	if [[ ! $line == \#* ]] && [ -n "$line" ]; then
+		IFS=","
+		set -- $line
 
-    # dest - the file to override in ~/
-    # src - the source file in the dotfiles repo
-    dest=$(echo $1 | sed 's/^ *//g' | sed 's/ *$//g')
-    dest=${dest/"~"/$HOME}
-    src=$(echo $2 | sed 's/^ *//g' | sed 's/ *$//g')
-    src=$DOTFILES$src
+		# dest - the file to override in ~/
+		# src - the source file in the dotfiles repo
+		dest=$(echo $1 | sed 's/^ *//g' | sed 's/ *$//g')
+		dest=${dest/"~"/$HOME}
+		src=$(echo $2 | sed 's/^ *//g' | sed 's/ *$//g')
+		src=$DOTFILES$src
 
-    # unlink
-    if [ -L $dest ]; then
-      unlink $dest
-    fi
+		# unlink
+		if [ -L $dest ]; then
+			unlink $dest
+		fi
 
-    # delete file
-    if [ -a $dest ]; then
-      rm -rf $dest
-    fi
+		# delete file
+		if [ -a $dest ]; then
+			rm -rf $dest
+		fi
 
-    # create dir
-    mkdir -p -- "$(dirname -- "$dest")"
+		# create dir
+		mkdir -p -- "$(dirname -- "$dest")"
 
-    # create link
-    ln -sfF $src $dest
-    echo "$src -> $dest"
-  fi
+		# create link
+		ln -sfF $src $dest
+		echo "$src -> $dest"
+	fi
 done < $LINKS
