@@ -1,0 +1,15 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"cloudsdale.subl",
+		"Markdown Extended"
+	],
+	"repositories":
+	[
+		"https://github.com/cloudsdaleapp/cloudsdale.subl"
+	]
+}

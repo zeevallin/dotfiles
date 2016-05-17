@@ -24,18 +24,13 @@ for package in ${packages[@]}; do
 done
 
 if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; then
-  ln -f -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+  ln -f -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl2
 else
   echo "Sublime Text 2 is not installed..."
 fi
 
-if [ -d $HOME/Library/Application\ Support/Sublime\ Text\ 2/Packages/Cloudsdale  ]; then
-  echo "Updating Sublime Text Cloudsdale theme..."
-  cwd=$(pwd)
-  cd $HOME/Library/Application\ Support/Sublime\ Text\ 2/Packages/Cloudsdale
-  git pull
-  cd $cwd
+if [ -x "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ]; then
+  ln -f -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 else
-  echo "Installing Sublime Text Cloudsdale theme..."
-  git clone git@github.com:cloudsdaleapp/cloudsdale.subl.git $HOME/Library/Application\ Support/Sublime\ Text\ 2/Packages/Cloudsdale
+  echo "Sublime Text 3 is not installed..."
 fi
