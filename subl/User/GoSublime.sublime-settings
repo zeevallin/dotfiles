@@ -8,7 +8,7 @@
     // the corresponding environment(PATH) variable, if it exists.
     "env": {
         "GOPATH": "$HOME/.go/",
-        "PATH": "$HOME/.go/bin:$PATH",
+        "PATH": "$HOME/.go/bin:$PATH"
     },
 
     // if set, whenever possible `GOPATH` will be set to `GS_GOPATH`.
