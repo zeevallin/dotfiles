@@ -7,7 +7,8 @@
 	[
 		"cloudsdale.subl",
 		"Golang Tools Integration",
-		"Markdown Extended"
+		"Markdown Extended",
+		"Protobuf Syntax Hightlighting"
 	],
 	"repositories":
 	[
