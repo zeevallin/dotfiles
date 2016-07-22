@@ -19,7 +19,7 @@ else
 fi
 
 for golang_pkg in ${GO_PKGS[@]}; do
-	go get ${golang_pkg}
+	go get -u ${golang_pkg}
 done
 
 echo "Setting up symlinks:"
