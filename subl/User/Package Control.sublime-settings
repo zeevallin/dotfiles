@@ -6,6 +6,7 @@
 	"installed_packages":
 	[
 		"cloudsdale.subl",
+		"Gist",
 		"Golang Tools Integration",
 		"GoSublime",
 		"Markdown Extended",
