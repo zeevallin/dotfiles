@@ -1,6 +1,6 @@
 {
     // The maximum amount of memory(MiB) that MarGo is allowed to use
-    "margo_oom": 1000,
+    "margo_oom": 2000,
 
     // you may set specific environment variables here
     // e.g "env": { "PATH": "$HOME/go/bin:$PATH" }
@@ -162,7 +162,7 @@
     "autocomplete_tests": false,
 
     // whether or not builtin types and functions should be shown in the auto-completion list
-    "autocomplete_builtins": false,
+    "autocomplete_builtins": true,
 
     // whether or not to show an expanded(closure) version of func types in the auto-completion list
     // e.g. `type Fun func(i int)`
@@ -178,7 +178,7 @@
     // whether or not autocomplete should suggest possible imports when autocomplete fails to
     // find a match.
     // note: this feature only comes into effect when autocomplete was triggered after a dot, e.g. `fmt.|`
-    "autocomplete_suggest_imports": false,
+    "autocomplete_suggest_imports": true,
 
     // whether or not to show function call tip in the status bar
     // the same can be achieved ctrl+dot,ctrl+space using an output panel
