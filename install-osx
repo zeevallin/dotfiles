@@ -41,5 +41,11 @@ mkdir -p $(echo $GOPATH | tr ":" " ")
 mkdir -p $(echo $GOBIN | tr ":" " ")
 
 mkdir -p ~/.go/src/github.com
-ln -sf ~/Projects/Mojang ~/.go/src/github.com/mojang
-ln -sf ~/Projects/zeeraw ~/.go/src/github.com/zeeraw
+
+if [ ! -L ~/.go/src/github.com/mojang ]; then
+	ln -s ~/Projects/mojang ~/.go/src/github.com/mojang
+fi
+
+if [ ! -L ~/.go/src/github.com/zeeraw ]; then
+	ln -s ~/Projects/zeeraw ~/.go/src/github.com/zeeraw
+fi
