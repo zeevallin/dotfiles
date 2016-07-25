@@ -36,6 +36,10 @@ else
 	echo "Sublime Text 3 is not installed..."
 fi
 
-# Make home Projects directory exist inside the GOPATH
+# go
+mkdir -p $(echo $GOPATH | tr ":" " ")
+mkdir -p $(echo $GOBIN | tr ":" " ")
+
 mkdir -p ~/.go/src/github.com
-ln -s ~/Projects/Mojang ~/.go/src/github.com/Mojang
+ln -sf ~/Projects/Mojang ~/.go/src/github.com/mojang
+ln -sf ~/Projects/zeeraw ~/.go/src/github.com/zeeraw

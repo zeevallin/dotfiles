@@ -17,10 +17,11 @@ export PROJECTS_PATH=$HOME/Projects
 
 # go
 if [ $(which go) ] && [ -x $(which go) ]; then
-  export GOPATH=$HOME/.go
-  export GOBIN=$GOPATH/bin
-  export PATH=$GOBIN:/usr/local/opt/go/bin:$PATH
-  if ! [ -d $GOPATH ]; then mkdir -p $GOPATH ;fi
+  if [[ "$OSTYPE" == darwin* ]]; then
+    export GOPATH=/usr/local/go:$HOME/.go
+    export GOBIN=/usr/local/go/bin
+    export PATH=$GOBIN:$PATH
+  fi
 else
   echo "[x] go-lang not installed"
 fi
