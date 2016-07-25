@@ -12,6 +12,9 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
+# projects
+export PROJECTS_PATH=$HOME/Projects
+
 # go
 if [ $(which go) ] && [ -x $(which go) ]; then
   export GOPATH=$HOME/.go
@@ -40,3 +43,9 @@ alias markdown=md
 # useful tools
 killport () { lsof -i :$1 | sed 1d | awk '{print $2}' | xargs kill -9 }
 
+# tabtab source for realms package
+# uninstall by removing these lines or running `tabtab uninstall realms`
+[[ -f $PROJECTS_PATH/Mojang/RealmsCLI/node_modules/tabtab/.completions/realms.zsh ]] && . $PROJECTS_PATH/Mojang/RealmsCLI/node_modules/tabtab/.completions/realms.zsh
+# begin sift completion
+. <(sift --completion)
+# end sift completion
