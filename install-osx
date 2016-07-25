@@ -35,3 +35,7 @@ if [ -x "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ]; then
 else
 	echo "Sublime Text 3 is not installed..."
 fi
+
+# Make home Projects directory exist inside the GOPATH
+mkdir -p ~/.go/src/github.com
+ln -s ~/Projects/Mojang ~/.go/src/github.com/Mojang
