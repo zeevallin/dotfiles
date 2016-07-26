@@ -7,5 +7,7 @@
     ],
 
     // Controls what scopes auto complete will be triggered in
-    "auto_complete_selector": "meta.tag - punctuation.definition.tag.begin, source - comment - string - constant.numeric"
+    "auto_complete_selector": "meta.tag - punctuation.definition.tag.begin, source - comment - string - constant.numeric",
+    "tab_size": 2,
+    "translate_tabs_to_spaces": false
 }

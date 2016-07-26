@@ -1,0 +1,9 @@
+{
+	"extensions":
+	[
+		"go",
+        "pb.go"
+	],
+    "tab_size": 2,
+    "translate_tabs_to_spaces": false
+}
