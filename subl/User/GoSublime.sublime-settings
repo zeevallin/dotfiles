@@ -28,16 +28,16 @@
     "shell": [],
 
     // whether or not pkg files should be automatically saved when necessary (e.g. when running 9o `replay` or `go test` commands)
-    "autosave": true,
+    "autosave": false,
 
     // Whether or not gscomplete(gocode) is enabled
     "gscomplete_enabled": true,
 
     // Whether or not gsfmt is enabled
-    "fmt_enabled": true,
+    "fmt_enabled": false,
 
     // whether or not to indent with tabs (alignment is always done using spaces)
-    "fmt_tab_indent": true,
+    "fmt_tab_indent": false,
 
     // the assumed width of the tab character (or number of spaces to indent with)
     "fmt_tab_width": 8,
@@ -58,7 +58,7 @@
     "ipc_timeout": 1,
 
     // Whether or not gslint is enabled
-    "gslint_enabled": true,
+    "gslint_enabled": false,
 
     // filter the kinds of lint checks that are done. supported kinds:
     //
@@ -95,7 +95,7 @@
 
     // Not Implemented
     // Whether or not gslint is enabled
-    "lint_enabled": true,
+    "lint_enabled": false,
 
     // Not Implemented
     // list of linters to run
@@ -159,7 +159,7 @@
     "autocomplete_snippets": true,
 
     // whether or not to include Test*, Benchmark* and Example* functions in the auto-completion list
-    "autocomplete_tests": false,
+    "autocomplete_tests": true,
 
     // whether or not builtin types and functions should be shown in the auto-completion list
     "autocomplete_builtins": true,
@@ -314,7 +314,10 @@
     // see 9o help(ctrl+9 "help") for more details about what commands are supported
     "build_command": ["^1"],
 
-    "auto_complete_triggers": [ {"selector": "source.go", "characters": "."} ],
+    "auto_complete_triggers": [
+        {"selector": "source.go", "characters": "."},
+        {"selector": "source.go", "characters": "/"}
+    ],
 
     // exclude files with the listed prefixes from the file browsing palette (ctrl+dot,ctrl+m)
     "fn_exclude_prefixes": [".", "_"],
