@@ -49,3 +49,7 @@ fi
 if [ ! -L ~/.go/src/github.com/zeeraw ]; then
 	ln -s ~/Projects/zeeraw ~/.go/src/github.com/zeeraw
 fi
+
+if [ ! -L ~/.go/src/github.com/pkmngo-odi ]; then
+	ln -s ~/Projects/pkmngo-odi ~/.go/src/github.com/pkmngo-odi
+fi
