@@ -5,16 +5,24 @@
 	],
 	"installed_packages":
 	[
+		"Better CoffeeScript",
 		"cloudsdale.subl",
+		"CoffeeScriptHaml",
+		"Ecmascript Syntax",
 		"Gist",
+		"GoGuru",
 		"Golang Build",
 		"Golang Tools Integration",
 		"GoSublime",
 		"GoTools",
+		"Haml",
+		"INI",
 		"Markdown Extended",
 		"Markdown Preview",
 		"Package Control",
-		"Protobuf Syntax Hightlighting"
+		"PICO-8",
+		"Protobuf Syntax Hightlighting",
+		"Sass"
 	],
 	"repositories":
 	[
