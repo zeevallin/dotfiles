@@ -24,6 +24,12 @@ for package in ${packages[@]}; do
 		fi
 done
 
+if [ -x "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" ]; then
+	ln -f -s "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" /usr/local/bin/code
+else
+	echo "Visual Studio Code is not installed..."
+fi
+
 if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; then
 	ln -f -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl2
 else
