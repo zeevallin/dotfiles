@@ -27,6 +27,7 @@ done
 
 echo "Setting up symlinks:"
 
+mkdir -p ~/.bin/
 while read line; do
 	if [[ ! $line == \#* ]] && [ -n "$line" ]; then
 		IFS=","
