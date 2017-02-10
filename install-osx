@@ -46,16 +46,5 @@ fi
 mkdir -p $(echo $GOPATH | tr ":" " ")
 mkdir -p $(echo $GOBIN | tr ":" " ")
 
-mkdir -p ~/.go/src/github.com
-
-if [ ! -L ~/.go/src/github.com/mojang ]; then
-	ln -s ~/Projects/mojang ~/.go/src/github.com/mojang
-fi
-
-if [ ! -L ~/.go/src/github.com/zeeraw ]; then
-	ln -s ~/Projects/zeeraw ~/.go/src/github.com/zeeraw
-fi
-
-if [ ! -L ~/.go/src/github.com/pkmngo-odi ]; then
-	ln -s ~/Projects/pkmngo-odi ~/.go/src/github.com/pkmngo-odi
-fi
+mkdir -p \
+	~/.go/src/github.com/zeeraw
