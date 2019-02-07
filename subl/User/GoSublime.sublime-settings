@@ -7,7 +7,7 @@
     // in values, $PATH and ${PATH} are replaced with
     // the corresponding environment(PATH) variable, if it exists.
     "env": {
-        "GOPATH": "/usr/local/go:$HOME/.go/",
+        "GOPATH": "/usr/local/go:$HOME/go/",
         "PATH": "/usr/local/go/bin:$PATH"
     },
 

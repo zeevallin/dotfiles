@@ -1,5 +1,5 @@
 {
-    "GOPATH": "/usr/local/go:/Users/zeeraw/.go",
+    "GOPATH": "/usr/local/go:/Users/zeeraw/go",
     "PATH": "/usr/local/go/bin:/usr/local/opt/go/bin:./bin:~/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
 
     // Format source files each time they're saved.

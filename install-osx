@@ -47,4 +47,4 @@ mkdir -p $(echo $GOPATH | tr ":" " ")
 mkdir -p $(echo $GOBIN | tr ":" " ")
 
 mkdir -p \
-	~/.go/src/github.com/zeeraw
+	~/go/src/github.com/zeeraw

@@ -18,11 +18,12 @@
 		"Haml",
 		"INI",
 		"Markdown Extended",
-		"Markdown Preview",
+		"MarkdownPreview",
 		"Package Control",
 		"PICO-8",
 		"Protobuf Syntax Hightlighting",
-		"Sass"
+		"Sass",
+		"TypeScript Syntax"
 	],
 	"repositories":
 	[
