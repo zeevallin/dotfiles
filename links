@@ -11,6 +11,8 @@
 ~/.zpreztorc, /zsh/.zpreztorc
 ~/.zprofile, /zsh/.zprofile
 ~/.zshrc, /zsh/.zshrc
+~/.zshfuncs, /zsh/funcs
+~/.zshplugins, /zsh/plugins
 
 # vim
 ~/.vimrc, /vim/.vimrc
@@ -20,3 +22,12 @@
 
 # subl
 ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User, /subl/User
+
+# code
+~/Library/Application\ Support/Code/User/settings.json, /code/settings.json
+~/Library/Application\ Support/Code/User/locale.json, /code/locale.json
+~/Library/Application\ Support/Code/User/keybindings.json, /code/keybindings.json
+~/.vscode/extensions, /code/extensions
+
+# tools
+~/.tools, /tools

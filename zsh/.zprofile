@@ -1,61 +1,38 @@
-#!/bin/sh
-#
+# !/bin/sh
 # Executes commands at login pre-zshrc.
-#
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#   Philip Vieira <zee@vall.in>
-#
 
-#
-# Limits
-#
-
+# limits
 if [[ "$OSTYPE" == darwin* ]]; then
   ulimit -n 65536 >/dev/null 2>&1
   ulimit -u 2048 >/dev/null 2>&1
 fi
 
-#
-# Browser
-#
-
+# browser
 if [[ "$OSTYPE" == darwin* ]]; then
   export BROWSER='open'
 fi
 
-#
-# Editors
-#
-
+# editors
 export EDITOR='vim'
 export VISUAL='vim'
 export PAGER='less'
 
-#
-# Language
-#
-
+# language
 if [[ -z "$LANG" ]]; then
   export LANG='en_US.UTF-8'
 fi
 
-#
-# Paths
-#
+# paths
 
-# Ensure path arrays do not contain duplicates.
-typeset -gU cdpath fpath mailpath path
+# Set the the list of directories that cd searches
+cdpath=(
+  $cdpath
+)
 
-# Set the the list of directories that cd searches.
-# cdpath=(
-#   $cdpath
-# )
-
-# Set the list of directories that Zsh searches for programs.
+# Set the list of directories that Zsh searches for programs
 path=(
   ./bin
-  ~/.bin
+  $HOME/.bin
   /usr/local/bin
   /usr/bin
   /bin
@@ -64,28 +41,37 @@ path=(
   /sbin
 )
 
-#
-# Less
-#
+# Set fpath for functions
+fpath=(
+  $HOME/.zshfuncs
+  $fpath
+)
 
-# Set the default Less options.
-# Mouse-wheel scrolling has been disabled by -X (disable screen clearing).
-# Remove -X and -F (exit if the content fits on one screen) to enable it.
+# ensure path arrays do not contain duplicates
+typeset -gU cdpath fpath mailpath path
+
+# projects
+export PROJECTS_PATH=$HOME/Projects
+
+# code
+export CODE_PATH=$HOME/Code
+
+# less
 export LESS='-F -g -i -M -R -S -w -X -z-4'
-
-# Set the Less input preprocessor.
-# Try both `lesspipe` and `lesspipe.sh` as either might exist on a system.
 if (( $#commands[(i)lesspipe(|.sh)] )); then
   export LESSOPEN="| /usr/bin/env $commands[(i)lesspipe(|.sh)] %s 2>&-"
 fi
 
-#
-# Temporary Files
-#
-
+# temporary files
 if [[ ! -d "$TMPDIR" ]]; then
   export TMPDIR="/tmp/$LOGNAME"
   mkdir -p -m 700 "$TMPDIR"
 fi
-
 TMPPREFIX="${TMPDIR%/}/zsh"
+
+# k8s
+export KUBECONFIG=$HOME/.kube/config.yaml
+
+# lush
+export LUSH_ROOT="$HOME/go/src/gitlab.com/LUSHDigital/soa"
+export LUSH_SERVICE_IMAGE="eu.gcr.io/utilities-prod-europe-west2/soa/dev-ops/microservice-bootstrap:latest"

@@ -1,32 +1,29 @@
 #!/bin/sh
 
-DOTFILES=${PWD}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOTFILES=${DIR}
 LINKS="$DOTFILES/links"
-GO_PKGS=(
-	github.com/nsf/gocode
-	github.com/golang/lint/golint
-	golang.org/x/tools/cmd/guru
-	golang.org/x/tools/cmd/goimports
-	golang.org/x/tools/cmd/gorename
-	github.com/golang/protobuf/proto
-	github.com/golang/protobuf/protoc-gen-go
-)
 
 if [ ! -d $HOME/.zprezto ]; then
+	echo "[√] installing prezto"
 	git clone --recursive https://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
 else
+	echo "[√] updating prezto"
 	cd $HOME/.zprezto && \
 		git pull --recurse-submodules && \
 		cd $DOTFILES
 fi
 
-for golang_pkg in ${GO_PKGS[@]}; do
-	go get -u ${golang_pkg}
-done
+echo "[√] creating directories"
 
-echo "Setting up symlinks:"
+mkdir -p "$HOME/.bin/"
 
-mkdir -p ~/.bin/
+echo "[√] creating files"
+
+touch "$HOME/.secret"
+
+echo "[√] setting up symlinks"
+
 while read line; do
 	if [[ ! $line == \#* ]] && [ -n "$line" ]; then
 		IFS=","
