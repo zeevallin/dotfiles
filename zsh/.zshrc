@@ -57,3 +57,5 @@ killport () { lsof -i :$1 | sed 1d | awk '{print $2}' | xargs kill -9 }
 # lush
 lush-new-agg () { docker run -v $LUSH_ROOT/aggregators:/service -it $LUSH_SERVICE_IMAGE }
 lush-new-service () { docker run -v $LUSH_ROOT/service:/service -it $LUSH_SERVICE_IMAGE }
+
+secret () { $DEVELOP $HOME/.secret }
