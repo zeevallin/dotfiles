@@ -4,8 +4,8 @@
         80
     ],
     "go.autocompleteUnimportedPackages": true,
-    "go.buildOnSave": "package",
     "go.lintOnSave": "package",
+    "go.buildOnSave": "package",
     "go.vetOnSave": "package",
     "go.buildTags": "",
     "go.buildFlags": [],
@@ -19,7 +19,41 @@
     "go.goroot": "/usr/local/opt/go/libexec",
     "go.gopath": "/usr/local/go:/Users/zeeraw/go",
     "go.toolsGopath": "/usr/local/gotools",
+    "go.gocodeFlags": [
+        "-debug",
+        "-builtin",
+        "-ignore-case",
+        "-unimported-packages"
+    ],
     "go.gocodeAutoBuild": false,
+    // "go.buildOnSave": "off", // for use with language server
+    // "go.vetOnSave": "off", // for use with language server
+    "[go]": { // for use with language server
+        "editor.snippetSuggestions": "top",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+        "editor.formatOnSave": true,
+    },
+    "go.useLanguageServer": false,
+    "go.alternateTools": {
+        "go-langserver": "gopls",
+    },
+    "go.languageServerFlags": [
+    ],
+    "go.languageServerExperimentalFeatures": {
+        "format": true,
+        "autoComplete": true,
+        "diagnostics": true,
+        "goToDefinition": true,
+        "hover": true,
+        "signatureHelp": true,
+        "goToTypeDefinition": true,
+        "documentSymbols": true,
+        "rename": true,
+        "findReferences": true,
+        "workspaceSymbols": true,
+    },
     "go.editorContextMenuCommands": {
         "toggleTestFile": false,
         "addTags": false,
@@ -34,25 +68,19 @@
         "testCoverage": false,
         "playground": false
     },
-    "[go]": {
-        "editor.formatOnSave": true,
-    },
     "files.associations": {
         "*.sql": "sql",
         "*.mysql": "sql",
         "*.postgresql": "postgres",
-        ".env.prod": "dotenv",
-        "*.postgres": "postgres",
-        "hosts": "ansible-advanced",
+        "*.env.prod": "dotenv",
+        ".env*": "dotenv",
+        "*.postgres.sql": "postgres",
+        "*.pg.sql": "postgres",
         "*.yml": "yaml",
-        "production": "ansible-advanced"
     },
     "editor.multiCursorModifier": "ctrlCmd",
-    "[ansible-advanced]": {
-        "editor.tabSize": 2
-    },
-    "yaml.format.enable": true,
     "[yaml]": {
+        "editor.formatOnSave": true,
         "editor.insertSpaces": true,
         "editor.tabSize": 2,
         "editor.autoIndent": true
