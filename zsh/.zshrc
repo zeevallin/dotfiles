@@ -47,6 +47,11 @@ alias dclf='docker-compose logs -f'
 alias docker-clean='docker rm -fv $( docker ps -qa)'
 alias docker-gc='docker run --rm --userns host -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc -e REMOVE_VOLUMES=1 spotify/docker-gc'
 
+# mysql
+runmysql () { docker run --rm --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -p 33060:33060 -d mysql:latest }
+stopmysql () { docker rm -f mysql }
+logmysql () { docker logs -f mysql }
+
 # markdown
 md () { pandoc -s -f markdown -t man $1 | groff -T utf8 -man | less }
 alias markdown=md
