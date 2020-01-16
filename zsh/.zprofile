@@ -73,6 +73,9 @@ TMPPREFIX="${TMPDIR%/}/zsh"
 # k8s
 export KUBECONFIG=$HOME/.kube/config.yaml
 
+# gpg
+export GPG_TTY=`tty`
+
 # lush
 export LUSH_ROOT="$HOME/go/src/gitlab.com/LUSHDigital/soa"
 export LUSH_SERVICE_IMAGE="eu.gcr.io/utilities-prod-europe-west2/soa/dev-ops/microservice-bootstrap:latest"
