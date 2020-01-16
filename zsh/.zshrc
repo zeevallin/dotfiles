@@ -18,6 +18,7 @@ if [ $(which go) ] && [ -x $(which go) ]; then
     export GOPATH=/usr/local/go:$HOME/go
     export GOBIN=/usr/local/go/bin
     export GOTOOLSBIN=/usr/local/gotools/bin
+    export GOMODPATH=/usr/local/go/pkg/mod
     path=(
       $GOBIN
       $GOTOOLSBIN
