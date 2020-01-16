@@ -14,6 +14,7 @@ fi
 # go
 if [ $(which go) ] && [ -x $(which go) ]; then
   if [[ "$OSTYPE" == darwin* ]]; then
+    export GOPROXY=https://goproxy.io
     export GOPATH=/usr/local/go:$HOME/go
     export GOBIN=/usr/local/go/bin
     export GOTOOLSBIN=/usr/local/gotools/bin
