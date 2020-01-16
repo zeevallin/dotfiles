@@ -66,3 +66,6 @@ lush-new-agg () { docker run -v $LUSH_ROOT/aggregators:/service -it $LUSH_SERVIC
 lush-new-service () { docker run -v $LUSH_ROOT/service:/service -it $LUSH_SERVICE_IMAGE }
 
 secret () { $DEVELOP $HOME/.secret }
+
+# added by travis gem
+[ -f /Users/philipvieira/.travis/travis.sh ] && source /Users/philipvieira/.travis/travis.sh
