@@ -7,7 +7,7 @@ case $state in
   level1)
     case $words[1] in
       gctl)
-        _arguments '1: :(gen-bash-completion gen-zsh-completion help tree)'
+        _arguments '1: :(clone gen-bash-completion gen-zsh-completion help pipeline tree)'
       ;;
       *)
         _arguments '*: :_files'
