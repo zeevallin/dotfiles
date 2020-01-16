@@ -1,0 +1,354 @@
+{
+	"name": "vscode-postgres",
+	"displayName": "PostgreSQL",
+	"description": "PostgreSQL Management Tool",
+	"version": "1.1.11",
+	"publisher": "ckolkman",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Borvik/vscode-postgres.git"
+	},
+	"engines": {
+		"vscode": "^1.26.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "postgres",
+				"extensions": [
+					".pgsql",
+					".psql"
+				],
+				"aliases": [
+					"Postgres"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "postgres",
+				"scopeName": "source.pgsql",
+				"path": "./syntaxes/pgsql.tmLanguage"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "PostgreSQL",
+			"properties": {
+				"vscode-postgres.defaultConnection": {
+					"type": "string",
+					"default": "",
+					"description": "The default connection to use"
+				},
+				"vscode-postgres.defaultDatabase": {
+					"type": "string",
+					"default": "",
+					"description": "The default database on the default connection to use"
+				},
+				"vscode-postgres.showExplorer": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show or hide the database explorer."
+				},
+				"vscode-postgres.prettyPrintJSONfields": {
+					"type": "boolean",
+					"default": false,
+					"description": "Turns on/off pretty printing of JSON fields"
+				},
+				"vscode-postgres.setConnectionFromExplorer": {
+					"type": "string",
+					"enum": [
+						"always",
+						"ifunset",
+						"never"
+					],
+					"default": "always",
+					"description": "Controls whether selecting a database in explorer changes the current editor's connection"
+				},
+				"vscode-postgres.tableColumnSortOrder": {
+					"type": "string",
+					"enum": [
+						"db-order",
+						"alpha",
+						"reverse-alpha"
+					],
+					"default": "db-order",
+					"description": "Controls the order of the columns in the database explorer. Default is db-order which orders the columns as the were added to the table (how postgres reports them)"
+				},
+				"vscode-postgres.intervalFormat": {
+					"type": "string",
+					"enum": [
+						"iso_8601",
+						"humanize",
+						"succinct"
+					],
+					"default": "iso_8601",
+					"description": "Controls the display format for `interval` columns. Default is the iso_8601 standard which does not cover milliseconds."
+				},
+				"vscode-postgres.virtualFolders": {
+					"type": "array",
+					"default": [
+						"functions"
+					],
+					"description": "Controls virtual folders that are shown under schema. Currently only functions are supported."
+				}
+			}
+		},
+		"keybindings": [
+			{
+				"command": "vscode-postgres.runQuery",
+				"key": "f5",
+				"when": "editorLangId == postgres"
+			}
+		],
+		"commands": [
+			{
+				"command": "vscode-postgres.addConnection",
+				"title": "Add Connection",
+				"icon": {
+					"light": "resources/light/add.svg",
+					"dark": "resources/dark/add.svg"
+				},
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.deleteConnection",
+				"title": "Delete Connection",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.selectConnection",
+				"title": "Select Connection",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.renameConnection",
+				"title": "Rename Connection",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.editConnection",
+				"title": "Edit Connection",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.newQuery",
+				"title": "New Query",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.refresh",
+				"title": "Refresh Items",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.selectTop",
+				"title": "Select Top...",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.selectTop1000",
+				"title": "Select Top 1000",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.runQuery",
+				"title": "Run Query",
+				"category": "PostgreSQL"
+			},
+			{
+				"command": "vscode-postgres.saveResult",
+				"title": "Save Result",
+				"category": "PostgreSQL",
+				"icon": {
+					"light": "./resources/light/save.svg",
+					"dark": "./resources/dark/save.svg"
+				}
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "vscode-postgres.saveResult",
+					"when": "vscodePostgresResultFocus",
+					"group": "navigation"
+				}
+			],
+			"view/title": [
+				{
+					"command": "vscode-postgres.addConnection",
+					"when": "view == postgres",
+					"group": "navigation@1"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "vscode-postgres.runQuery",
+					"when": "editorLangId == postgres"
+				},
+				{
+					"command": "vscode-postgres.runQuery",
+					"when": "editorLangId != postgres && editorHasSelection && !editorHasMultipleSelections"
+				},
+				{
+					"command": "vscode-postgres.selectTop",
+					"when": "config.vscode-postgres.never"
+				},
+				{
+					"command": "vscode-postgres.selectTop1000",
+					"when": "config.vscode-postgres.never"
+				},
+				{
+					"command": "vscode-postgres.saveResult",
+					"when": "config.vscode-postgres.never"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "vscode-postgres.runQuery",
+					"when": "editorLangId != postgres && editorHasSelection && !editorHasMultipleSelections",
+					"group": "navigation"
+				},
+				{
+					"command": "vscode-postgres.runQuery",
+					"when": "editorLangId == postgres",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "vscode-postgres.editConnection",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.connection",
+					"group": "postgres@2"
+				},
+				{
+					"command": "vscode-postgres.deleteConnection",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.connection",
+					"group": "postgres@2"
+				},
+				{
+					"command": "vscode-postgres.renameConnection",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.connection",
+					"group": "postgres@2"
+				},
+				{
+					"command": "vscode-postgres.refresh",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.connection",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.refresh",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.schema",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.refresh",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.database",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.refresh",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.table",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.refresh",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.function-folder",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.newQuery",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.connection",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.newQuery",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.database",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.newQuery",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.table",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.newQuery",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.column",
+					"group": "postgres@1"
+				},
+				{
+					"command": "vscode-postgres.selectTop",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.table",
+					"group": "postgres@2"
+				},
+				{
+					"command": "vscode-postgres.selectTop1000",
+					"when": "view == postgres && viewItem == vscode-postgres.tree.table",
+					"group": "postgres@2"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "postgres-explorer",
+					"title": "PostgreSQL Explorer",
+					"icon": "resources/postgres-explorer.svg"
+				}
+			]
+		},
+		"views": {
+			"postgres-explorer": [
+				{
+					"id": "postgres",
+					"name": "PostgreSQL",
+					"when": "config.vscode-postgres.showExplorer == true"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run build-preview && npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "npm run build-preview-dev && tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"build-preview-dev": "npx webpack --mode development",
+		"build-preview": "npx webpack --mode production"
+	},
+	"devDependencies": {
+		"@types/csv-stringify": "^1.4.2",
+		"@types/keytar": "^4.0.1",
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^7.0.70",
+		"@types/pg": "^7.4.10",
+		"@types/uuid": "^3.4.4",
+		"ts-loader": "^4.5.0",
+		"typescript": "^2.9.2",
+		"vscode": "^1.1.30",
+		"webpack": "^4.29.6",
+		"webpack-cli": "^3.3.0"
+	},
+	"dependencies": {
+		"csv-stringify": "^3.1.1",
+		"easyxml": "^2.0.1",
+		"pg": "^7.4.3",
+		"uuid": "^3.3.2",
+		"vscode-languageclient": "^4.4.2",
+		"vscode-languageserver": "^4.4.2"
+	},
+	"__metadata": {
+		"id": "b200e7e8-4217-4da9-b8db-5606db56d867",
+		"publisherId": "7a200ada-7d6e-4083-99e7-974f31cf3bff",
+		"publisherDisplayName": "Chris Kolkman"
+	}
+}

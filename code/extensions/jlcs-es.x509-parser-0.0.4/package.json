@@ -1,0 +1,65 @@
+{
+	"name": "x509-parser",
+	"displayName": "x509 parser",
+	"description": "Parse OpenSSL artifacts to human readable text",
+	"version": "0.0.4",
+	"publisher": "jlcs-es",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jlcs-es/x509-parser"
+	},
+	"bugs": {
+		"url": "https://github.com/jlcs-es/x509-parser/issues"
+	},
+	"engines": {
+		"vscode": "^1.30.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.parseX509",
+		"onCommand:extension.parseCSR"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.parseX509",
+				"title": "Parse x509 certificate"
+			},
+			{
+				"command": "extension.parseCSR",
+				"title": "Parse CSR"
+			},
+			{
+				"command": "extension.parseECkey",
+				"title": "Parse EC Private Key"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^8.10.59",
+		"@types/tmp": "^0.1.0",
+		"tslint": "^5.20.1",
+		"typescript": "^3.7.2",
+		"vscode": "^1.1.36"
+	},
+	"dependencies": {
+		"openssl-commander": "^0.1.5",
+		"tmp-promise": "^2.0.2"
+	},
+	"__metadata": {
+		"id": "552c89ac-bf01-4a42-9004-ac864c289630",
+		"publisherId": "97bd212a-f1b4-4d73-a719-792f88fbe4c6",
+		"publisherDisplayName": "Jose Luis Canovas"
+	}
+}

@@ -1,0 +1,58 @@
+{
+	"name": "toml",
+	"displayName": "TOML Language Support",
+	"description": "TOML language support",
+	"version": "0.4.0",
+	"publisher": "be5invis",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/GalAster/vscode-toml.git"
+	},
+	"engines": {
+		"vscode": "^1.8.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"scripts": {
+		"build": "ts-node extension/extension.ts",
+		"lint": "tslint **/*.ts --fix"
+	},
+	"contributes": {
+		"languages": [
+			{
+				"id": "toml",
+				"aliases": [
+					"TOML"
+				],
+				"extensions": [
+					".toml",
+					".tml"
+				],
+				"filenames": [
+					"Cargo.lock",
+					"Gopkg.lock"
+				],
+				"mimetypes": [
+					"text/x-toml"
+				],
+				"configuration": "./extension/toml.configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "toml",
+				"scopeName": "source.toml",
+				"path": "./extension/toml.tmLanguage.json"
+			}
+		]
+	},
+	"devDependencies": {
+		"@types/node": "^11.13.6"
+	},
+	"__metadata": {
+		"id": "e79fd228-c27f-423b-a8fc-b006fa99ed64",
+		"publisherId": "8c148d69-cbc6-480b-bd8b-a42715926324",
+		"publisherDisplayName": "be5invis"
+	}
+}

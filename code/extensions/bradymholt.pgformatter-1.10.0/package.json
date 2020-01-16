@@ -1,0 +1,166 @@
+{
+	"name": "pgformatter",
+	"displayName": "pgFormatter",
+	"description": "A PostgreSQL SQL formatter",
+	"author": {
+		"name": "Brady Holt"
+	},
+	"version": "1.10.0",
+	"publisher": "bradymholt",
+	"icon": "icon.png",
+	"galleryBanner": {
+		"theme": "dark",
+		"color": "#555555"
+	},
+	"engines": {
+		"vscode": "^1.19.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Formatters",
+		"Other"
+	],
+	"keywords": [
+		"pgsql",
+		"postgres",
+		"PostgreSQL",
+		"SQL",
+		"Formatting"
+	],
+	"license": "MIT",
+	"homepage": "https://github.com/bradymholt/vscode-pgFormatter",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bradymholt/vscode-pgFormatter.git"
+	},
+	"bugs": {
+		"url": "https://github.com/bradymholt/vscode-pgFormatter/issues"
+	},
+	"activationEvents": [
+		"onLanguage:sql",
+		"onLanguage:pgsql",
+		"onLanguage:postgres"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "sql",
+				"aliases": [
+					"SQL",
+					"sql",
+					"pgsql"
+				],
+				"extensions": [
+					"sql",
+					"pgsql"
+				]
+			},
+			{
+				"id": "postgres",
+				"aliases": [
+					"PostgreSQL",
+					"Postgres"
+				],
+				"extensions": [
+					"sql",
+					"pgsql"
+				]
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "pgFormatter Configuration",
+			"properties": {
+				"pgFormatter.spaces": {
+					"type": "number",
+					"description": "Number of spaces to indent the code"
+				},
+				"pgFormatter.commaStart": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use preceding comma in parameter list"
+				},
+				"pgFormatter.commaBreak": {
+					"type": "boolean",
+					"default": false,
+					"description": "In insert statement, add a newline after each comma"
+				},
+				"pgFormatter.commaEnd": {
+					"type": "boolean",
+					"default": true,
+					"description": "Use trailing comma in parameter list"
+				},
+				"pgFormatter.noComment": {
+					"type": "boolean",
+					"default": false,
+					"description": "Remove any comments"
+				},
+				"pgFormatter.functionCase": {
+					"type": "string",
+					"default": "unchanged",
+					"enum": [
+						"unchanged",
+						"lowercase",
+						"uppercase",
+						"capitalize"
+					],
+					"description": "Case of the function names"
+				},
+				"pgFormatter.noGrouping": {
+					"type": "boolean",
+					"default": false,
+					"description": "Add a newline between statements in transaction regroupement"
+				},
+				"pgFormatter.keywordCase": {
+					"type": "string",
+					"default": "uppercase",
+					"enum": [
+						"unchanged",
+						"lowercase",
+						"uppercase",
+						"capitalize"
+					],
+					"description": "Case of the reserved keywords"
+				},
+				"pgFormatter.formatType": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use another formatting type for some statements"
+				},
+				"pgFormatter.placeholder": {
+					"type": "string",
+					"default": null,
+					"description": "Regex to find code that must not be changed"
+				},
+				"pgFormatter.perlBinPath": {
+					"type": "string",
+					"default": "perl",
+					"description": "The path to the perl executable"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"vscode:prepublish": "npm run compile",
+		"vscode:publish": "vsce publish"
+	},
+	"devDependencies": {
+		"@types/mocha": "^5.2.7",
+		"@types/node": "^12.12.0",
+		"typescript": "^3.6.4",
+		"vscode": "^1.1.36"
+	},
+	"dependencies": {
+		"psqlformat": "^1.3.0"
+	},
+	"__metadata": {
+		"id": "849ffb6c-e755-4e6e-adc2-c33eaaf0d0fc",
+		"publisherId": "aed585ec-e052-4cc6-9922-640b3f76ae98",
+		"publisherDisplayName": "Brady Holt"
+	}
+}

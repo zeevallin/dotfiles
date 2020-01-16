@@ -1,0 +1,143 @@
+{
+	"name": "opensslutils",
+	"displayName": "opensslutils",
+	"description": "",
+	"version": "1.1.1",
+	"publisher": "ffaraone",
+	"engines": {
+		"vscode": "^1.23.0"
+	},
+	"icon": "images/opensslutils_logo.png",
+	"license": "SEE LICENSE IN LICENSE.md",
+	"galleryBanner": {
+		"color": "#1289B9",
+		"theme": "dark"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"ssl",
+		"openssl",
+		"certificate",
+		"self-signed",
+		"PKCS#12"
+	],
+	"repository": {
+		"url": "https://github.com/ffaraone/vscode-opensslutils.git"
+	},
+	"homepage": "https://github.com/ffaraone/vscode-opensslutils/blob/master/README.md",
+	"activationEvents": [
+		"onCommand:opensslutils.showOpenSSLPreview",
+		"onCommand:opensslutils.convertCrtToPem",
+		"onCommand:opensslutils.convertPemToCrt",
+		"onCommand:opensslutils.generateKeyCsr",
+		"onCommand:opensslutils.generatePrivKey",
+		"onCommand:opensslutils.generateSelfSignedCert",
+		"onCommand:opensslutils.generatePkcs12"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"configuration": [
+			{
+				"type": "object",
+				"title": "OpenSSL Utils configuration",
+				"properties": {
+					"opensslutils.opensslPath": {
+						"type": [
+							"string",
+							"null"
+						],
+						"default": null,
+						"description": "Full path to the openssl executable"
+					},
+					"opensslutils.useWsl": {
+						"type": [
+							"boolean"
+						],
+						"default": false,
+						"description": "Use OpenSSL via Windows Subsystem for Linux"
+					}
+				}
+			}
+		],
+		"commands": [
+			{
+				"command": "opensslutils.showOpenSSLPreview",
+				"title": "Show OpenSSL preview",
+				"category": "OpenSSL"
+			},
+			{
+				"command": "opensslutils.generateKeyCsr",
+				"title": "Generate Private Key end CSR",
+				"category": "OpenSSL"
+			},
+			{
+				"command": "opensslutils.generateSelfSignedCert",
+				"title": "Generate self-signed Certificate and Key",
+				"category": "OpenSSL"
+			},
+			{
+				"command": "opensslutils.generatePkcs12",
+				"title": "Generate PKCS12",
+				"category": "OpenSSL"
+			},
+			{
+				"command": "opensslutils.generatePrivKey",
+				"title": "Generate Private Key",
+				"category": "OpenSSL"
+			},
+			{
+				"command": "opensslutils.convertCrtToPem",
+				"title": "OpenSSL: Crt to Pem"
+			},
+			{
+				"command": "opensslutils.convertPemToCrt",
+				"title": "OpenSSL: Pem to Crt"
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "opensslutils.convertCrtToPem",
+					"when": "1 == 2"
+				},
+				{
+					"command": "opensslutils.convertPemToCrt",
+					"when": "1 == 2"
+				}
+			],
+			"explorer/context": [
+				{
+					"when": "!explorerResourceIsFolder",
+					"command": "opensslutils.convertCrtToPem",
+					"group": "z_openssl@1"
+				},
+				{
+					"when": "!explorerResourceIsFolder",
+					"command": "opensslutils.convertPemToCrt",
+					"group": "z_openssl@2"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"typescript": "^2.6.1",
+		"vscode": "^1.1.6",
+		"tslint": "^5.8.0",
+		"@types/node": "^7.0.43",
+		"@types/mocha": "^2.2.42"
+	},
+	"__metadata": {
+		"id": "0b652a93-c489-4adb-a89a-5316803a7ddf",
+		"publisherId": "65b09940-3134-43eb-a583-b659234338f7",
+		"publisherDisplayName": "Francesco Faraone"
+	}
+}

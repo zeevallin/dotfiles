@@ -1,0 +1,59 @@
+{
+	"name": "jsonnet-formatter",
+	"displayName": "jsonnet Formatter",
+	"description": "Provide jsonnet vscode format support.",
+	"version": "0.3.0",
+	"publisher": "xrc-inc",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xreception/vscode-jsonnet-formatter.git"
+	},
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/xreception/vscode-jsonnet-formatter/issues"
+	},
+	"homepage": "https://github.com/xreception/vscode-jsonnet-formatter#readme",
+	"engines": {
+		"vscode": "^1.37.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"activationEvents": [
+		"onLanguage:jsonnet"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "jsonnet",
+				"aliases": [
+					"Jsonnet"
+				],
+				"extensions": [
+					".jsonnet",
+					".libsonnet"
+				]
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "rm -rf ./out; yarn run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./"
+	},
+	"devDependencies": {
+		"@types/diff": "^4.0.1",
+		"@types/node": "^12.0.0",
+		"@types/vscode": "^1.37.0",
+		"typescript": "^3.5.0"
+	},
+	"dependencies": {
+		"diff": "^4.0.1"
+	},
+	"__metadata": {
+		"id": "120f24e6-01d2-498e-94ac-9a93cb43c26f",
+		"publisherId": "61b9708d-7aed-4313-9e9f-ed834e22ea0b",
+		"publisherDisplayName": "xrc-inc"
+	}
+}

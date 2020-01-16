@@ -1,0 +1,6 @@
+syntax = "proto3";
+package example;
+
+message Msg42a {
+  bytes test = 1 [default="aaaa \" dddd"];
+}

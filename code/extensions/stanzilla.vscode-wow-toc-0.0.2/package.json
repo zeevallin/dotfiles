@@ -1,0 +1,67 @@
+{
+	"name": "vscode-wow-toc",
+	"displayName": "WoW TOC",
+	"description": "World of Warcraft TOC Language Support",
+	"version": "0.0.2",
+	"icon": "images/wow-icon.png",
+	"publisher": "stanzilla",
+	"license": "MIT",
+	"galleryBanner": {
+		"color": "#FFFFFF",
+		"theme": "light"
+	},
+	"engines": {
+		"vscode": "^1.28.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"keywords": [
+		"WoW",
+		"World of Warcraft",
+		"Blizzard",
+		"FrameXML",
+		"TOC",
+		"addon"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "toc",
+				"extensions": [
+					".toc"
+				],
+				"aliases": [
+					"Toc",
+					"TOC"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "toc",
+				"scopeName": "source.toc",
+				"path": "./grammars/toc.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "toc",
+				"path": "./snippets/toc.json"
+			}
+		]
+	},
+	"bugs": {
+		"url": "https://github.com/Stanzilla/vscode-wow-toc//issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Stanzilla/vscode-wow-toc/"
+	},
+	"__metadata": {
+		"id": "70816c5d-3b66-4937-91bb-2e98a651f3fe",
+		"publisherId": "5e25d1f4-c74e-4dca-88b9-c4b196edad16",
+		"publisherDisplayName": "Stanzilla"
+	}
+}

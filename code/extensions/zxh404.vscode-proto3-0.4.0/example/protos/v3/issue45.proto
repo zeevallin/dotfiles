@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package issues;
+ 
+import "google/api/annotations.proto";
+
+message MyRequest {}
+message MyResponse {}
+
+service MyService {
+
+  rpc AuthenticateCustom (MyRequest) returns (MyResponse) {
+    option (my_option) = {
+      field1: {
+        field2: {
+          key: "BasicAuth";
+          value: {}; // this comma causes the problem
+        }
+      }
+    };
+  }
+ 
+  rpc AuthenticateDevice (MyRequest) returns (MyResponse) {
+    // empty
+  }
+ 
+ }
