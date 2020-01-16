@@ -1,6 +1,7 @@
 [user]
-	name = zeeraw
+	name = Zee V. (Philip)
 	email = zee@vall.in
+	signingkey = BFD5C775
 
 [github]
   user = zeeraw
@@ -16,3 +17,7 @@
 
 [fetch]
   prune = true
+[gpg]
+	program = /usr/local/bin/gpg
+[commit]
+	gpgsign = true
