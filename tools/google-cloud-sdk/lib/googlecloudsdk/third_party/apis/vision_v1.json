@@ -167,7 +167,7 @@
     },
     "Status": {
       "id": "Status",
-      "description": "The `Status` type defines a logical error model that is suitable for different\nprogramming environments, including REST APIs and RPC APIs. It is used by\n[gRPC](https:\/\/github.com\/grpc). The error model is designed to be:\n\n- Simple to use and understand for most users\n- Flexible enough to meet unexpected needs\n\n# Overview\n\nThe `Status` message contains three pieces of data: error code, error message,\nand error details. The error code should be an enum value of\ngoogle.rpc.Code, but it may accept additional error codes if needed.  The\nerror message should be a developer-facing English message that helps\ndevelopers *understand* and *resolve* the error. If a localized user-facing\nerror message is needed, put the localized message in the error details or\nlocalize it in the client. The optional error details may contain arbitrary\ninformation about the error. There is a predefined set of error detail types\nin the package `google.rpc` that can be used for common error conditions.\n\n# Language mapping\n\nThe `Status` message is the logical representation of the error model, but it\nis not necessarily the actual wire format. When the `Status` message is\nexposed in different client libraries and different wire protocols, it can be\nmapped differently. For example, it will likely be mapped to some exceptions\nin Java, but more likely mapped to some error codes in C.\n\n# Other uses\n\nThe error model and the `Status` message can be used in a variety of\nenvironments, either with or without APIs, to provide a\nconsistent developer experience across different environments.\n\nExample uses of this error model include:\n\n- Partial errors. If a service needs to return partial errors to the client,\n    it may embed the `Status` in the normal response to indicate the partial\n    errors.\n\n- Workflow errors. A typical workflow has multiple steps. Each step may\n    have a `Status` message for error reporting.\n\n- Batch operations. If a client uses batch request and batch response, the\n    `Status` message should be used directly inside batch response, one for\n    each error sub-response.\n\n- Asynchronous operations. If an API call embeds asynchronous operation\n    results in its response, the status of those operations should be\n    represented directly using the `Status` message.\n\n- Logging. If some API errors are stored in logs, the message `Status` could\n    be used directly after any stripping needed for security\/privacy reasons.",
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https:\/\/github.com\/grpc). The error model is designed to be:\n\n- Simple to use and understand for most users\n- Flexible enough to meet unexpected needs\n\n# Overview\n\nThe `Status` message contains three pieces of data: error code, error\nmessage, and error details. The error code should be an enum value of\ngoogle.rpc.Code, but it may accept additional error codes if needed.  The\nerror message should be a developer-facing English message that helps\ndevelopers *understand* and *resolve* the error. If a localized user-facing\nerror message is needed, put the localized message in the error details or\nlocalize it in the client. The optional error details may contain arbitrary\ninformation about the error. There is a predefined set of error detail types\nin the package `google.rpc` that can be used for common error conditions.\n\n# Language mapping\n\nThe `Status` message is the logical representation of the error model, but it\nis not necessarily the actual wire format. When the `Status` message is\nexposed in different client libraries and different wire protocols, it can be\nmapped differently. For example, it will likely be mapped to some exceptions\nin Java, but more likely mapped to some error codes in C.\n\n# Other uses\n\nThe error model and the `Status` message can be used in a variety of\nenvironments, either with or without APIs, to provide a\nconsistent developer experience across different environments.\n\nExample uses of this error model include:\n\n- Partial errors. If a service needs to return partial errors to the client,\n    it may embed the `Status` in the normal response to indicate the partial\n    errors.\n\n- Workflow errors. A typical workflow has multiple steps. Each step may\n    have a `Status` message for error reporting.\n\n- Batch operations. If a client uses batch request and batch response, the\n    `Status` message should be used directly inside batch response, one for\n    each error sub-response.\n\n- Asynchronous operations. If an API call embeds asynchronous operation\n    results in its response, the status of those operations should be\n    represented directly using the `Status` message.\n\n- Logging. If some API errors are stored in logs, the message `Status` could\n    be used directly after any stripping needed for security\/privacy reasons.",
       "type": "object",
       "properties": {
         "code": {
@@ -699,7 +699,7 @@
           }
         },
         "filter": {
-          "description": "The filtering expression. This can be used to restrict search results based\non Product labels. We currently support an AND of OR of key-value\nexpressions, where each expression within an OR must have the same key.\n\nFor example, \"(color = red OR color = blue) AND brand = Google\" is\nacceptable, but not \"(color = red OR brand = Google)\" or \"color: red\".",
+          "description": "The filtering expression. This can be used to restrict search results based\non Product labels. We currently support an AND of OR of key-value\nexpressions, where each expression within an OR must have the same key. An\n'=' should be used to connect the key and value.\n\nFor example, \"(color = red OR color = blue) AND brand = Google\" is\nacceptable, but \"(color = red OR brand = Google)\" is not acceptable.\n\"color: red\" is not acceptable because it uses a ':' instead of an '='.",
           "type": "string"
         }
       }
@@ -1615,7 +1615,7 @@
     },
     "Color": {
       "id": "Color",
-      "description": "Represents a color in the RGBA color space. This representation is designed\nfor simplicity of conversion to\/from color representations in various\nlanguages over compactness; for example, the fields of this representation\ncan be trivially provided to the constructor of \"java.awt.Color\" in Java; it\ncan also be trivially provided to UIColor's \"+colorWithRed:green:blue:alpha\"\nmethod in iOS; and, with just a little work, it can be easily formatted into\na CSS \"rgba()\" string in JavaScript, as well. Here are some examples:\n\nExample (Java):\n\n     import com.google.type.Color;\n\n     \/\/ ...\n     public static java.awt.Color fromProto(Color protocolor) {\n       float alpha = protocolor.hasAlpha()\n           ? protocolor.getAlpha().getValue()\n           : 1.0;\n\n       return new java.awt.Color(\n           protocolor.getRed(),\n           protocolor.getGreen(),\n           protocolor.getBlue(),\n           alpha);\n     }\n\n     public static Color toProto(java.awt.Color color) {\n       float red = (float) color.getRed();\n       float green = (float) color.getGreen();\n       float blue = (float) color.getBlue();\n       float denominator = 255.0;\n       Color.Builder resultBuilder =\n           Color\n               .newBuilder()\n               .setRed(red \/ denominator)\n               .setGreen(green \/ denominator)\n               .setBlue(blue \/ denominator);\n       int alpha = color.getAlpha();\n       if (alpha != 255) {\n         result.setAlpha(\n             FloatValue\n                 .newBuilder()\n                 .setValue(((float) alpha) \/ denominator)\n                 .build());\n       }\n       return resultBuilder.build();\n     }\n     \/\/ ...\n\nExample (iOS \/ Obj-C):\n\n     \/\/ ...\n     static UIColor* fromProto(Color* protocolor) {\n        float red = [protocolor red];\n        float green = [protocolor green];\n        float blue = [protocolor blue];\n        FloatValue* alpha_wrapper = [protocolor alpha];\n        float alpha = 1.0;\n        if (alpha_wrapper != nil) {\n          alpha = [alpha_wrapper value];\n        }\n        return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];\n     }\n\n     static Color* toProto(UIColor* color) {\n         CGFloat red, green, blue, alpha;\n         if (![color getRed:&red green:&green blue:&blue alpha:&alpha]) {\n           return nil;\n         }\n         Color* result = [[Color alloc] init];\n         [result setRed:red];\n         [result setGreen:green];\n         [result setBlue:blue];\n         if (alpha <= 0.9999) {\n           [result setAlpha:floatWrapperWithValue(alpha)];\n         }\n         [result autorelease];\n         return result;\n    }\n    \/\/ ...\n\n Example (JavaScript):\n\n    \/\/ ...\n\n    var protoToCssColor = function(rgb_color) {\n       var redFrac = rgb_color.red || 0.0;\n       var greenFrac = rgb_color.green || 0.0;\n       var blueFrac = rgb_color.blue || 0.0;\n       var red = Math.floor(redFrac * 255);\n       var green = Math.floor(greenFrac * 255);\n       var blue = Math.floor(blueFrac * 255);\n\n       if (!('alpha' in rgb_color)) {\n          return rgbToCssColor_(red, green, blue);\n       }\n\n       var alphaFrac = rgb_color.alpha.value || 0.0;\n       var rgbParams = [red, green, blue].join(',');\n       return ['rgba(', rgbParams, ',', alphaFrac, ')'].join('');\n    };\n\n    var rgbToCssColor_ = function(red, green, blue) {\n      var rgbNumber = new Number((red << 16) | (green << 8) | blue);\n      var hexString = rgbNumber.toString(16);\n      var missingZeros = 6 - hexString.length;\n      var resultBuilder = ['#'];\n      for (var i = 0; i < missingZeros; i++) {\n         resultBuilder.push('0');\n      }\n      resultBuilder.push(hexString);\n      return resultBuilder.join('');\n    };\n\n    \/\/ ...",
+      "description": "Represents a color in the RGBA color space. This representation is designed\nfor simplicity of conversion to\/from color representations in various\nlanguages over compactness; for example, the fields of this representation\ncan be trivially provided to the constructor of \"java.awt.Color\" in Java; it\ncan also be trivially provided to UIColor's \"+colorWithRed:green:blue:alpha\"\nmethod in iOS; and, with just a little work, it can be easily formatted into\na CSS \"rgba()\" string in JavaScript, as well.\n\nNote: this proto does not carry information about the absolute color space\nthat should be used to interpret the RGB value (e.g. sRGB, Adobe RGB,\nDCI-P3, BT.2020, etc.). By default, applications SHOULD assume the sRGB color\nspace.\n\nExample (Java):\n\n     import com.google.type.Color;\n\n     \/\/ ...\n     public static java.awt.Color fromProto(Color protocolor) {\n       float alpha = protocolor.hasAlpha()\n           ? protocolor.getAlpha().getValue()\n           : 1.0;\n\n       return new java.awt.Color(\n           protocolor.getRed(),\n           protocolor.getGreen(),\n           protocolor.getBlue(),\n           alpha);\n     }\n\n     public static Color toProto(java.awt.Color color) {\n       float red = (float) color.getRed();\n       float green = (float) color.getGreen();\n       float blue = (float) color.getBlue();\n       float denominator = 255.0;\n       Color.Builder resultBuilder =\n           Color\n               .newBuilder()\n               .setRed(red \/ denominator)\n               .setGreen(green \/ denominator)\n               .setBlue(blue \/ denominator);\n       int alpha = color.getAlpha();\n       if (alpha != 255) {\n         result.setAlpha(\n             FloatValue\n                 .newBuilder()\n                 .setValue(((float) alpha) \/ denominator)\n                 .build());\n       }\n       return resultBuilder.build();\n     }\n     \/\/ ...\n\nExample (iOS \/ Obj-C):\n\n     \/\/ ...\n     static UIColor* fromProto(Color* protocolor) {\n        float red = [protocolor red];\n        float green = [protocolor green];\n        float blue = [protocolor blue];\n        FloatValue* alpha_wrapper = [protocolor alpha];\n        float alpha = 1.0;\n        if (alpha_wrapper != nil) {\n          alpha = [alpha_wrapper value];\n        }\n        return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];\n     }\n\n     static Color* toProto(UIColor* color) {\n         CGFloat red, green, blue, alpha;\n         if (![color getRed:&red green:&green blue:&blue alpha:&alpha]) {\n           return nil;\n         }\n         Color* result = [[Color alloc] init];\n         [result setRed:red];\n         [result setGreen:green];\n         [result setBlue:blue];\n         if (alpha <= 0.9999) {\n           [result setAlpha:floatWrapperWithValue(alpha)];\n         }\n         [result autorelease];\n         return result;\n    }\n    \/\/ ...\n\n Example (JavaScript):\n\n    \/\/ ...\n\n    var protoToCssColor = function(rgb_color) {\n       var redFrac = rgb_color.red || 0.0;\n       var greenFrac = rgb_color.green || 0.0;\n       var blueFrac = rgb_color.blue || 0.0;\n       var red = Math.floor(redFrac * 255);\n       var green = Math.floor(greenFrac * 255);\n       var blue = Math.floor(blueFrac * 255);\n\n       if (!('alpha' in rgb_color)) {\n          return rgbToCssColor_(red, green, blue);\n       }\n\n       var alphaFrac = rgb_color.alpha.value || 0.0;\n       var rgbParams = [red, green, blue].join(',');\n       return ['rgba(', rgbParams, ',', alphaFrac, ')'].join('');\n    };\n\n    var rgbToCssColor_ = function(red, green, blue) {\n      var rgbNumber = new Number((red << 16) | (green << 8) | blue);\n      var hexString = rgbNumber.toString(16);\n      var missingZeros = 6 - hexString.length;\n      var resultBuilder = ['#'];\n      for (var i = 0; i < missingZeros; i++) {\n         resultBuilder.push('0');\n      }\n      resultBuilder.push(hexString);\n      return resultBuilder.join('');\n    };\n\n    \/\/ ...",
       "type": "object",
       "properties": {
         "red": {
@@ -1815,7 +1815,7 @@
       "type": "object",
       "properties": {
         "indexTime": {
-          "description": "Timestamp of the index which provided these results. Changes made after\nthis time are not reflected in the current results.",
+          "description": "Timestamp of the index which provided these results. Products added to the\nproduct set and products removed from the product set after this time are\nnot reflected in the current results.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -1889,6 +1889,163 @@
         }
       }
     },
+    "BatchAnnotateFilesRequest": {
+      "id": "BatchAnnotateFilesRequest",
+      "description": "A list of requests to annotate files using the BatchAnnotateFiles API.",
+      "type": "object",
+      "properties": {
+        "requests": {
+          "description": "The list of file annotation requests. Right now we support only one\nAnnotateFileRequest in BatchAnnotateFilesRequest.",
+          "type": "array",
+          "items": {
+            "$ref": "AnnotateFileRequest"
+          }
+        }
+      }
+    },
+    "AnnotateFileRequest": {
+      "id": "AnnotateFileRequest",
+      "description": "A request to annotate one single file, e.g. a PDF, TIFF or GIF file.",
+      "type": "object",
+      "properties": {
+        "inputConfig": {
+          "description": "Required. Information about the input file.",
+          "$ref": "InputConfig"
+        },
+        "features": {
+          "description": "Required. Requested features.",
+          "type": "array",
+          "items": {
+            "$ref": "Feature"
+          }
+        },
+        "imageContext": {
+          "description": "Additional context that may accompany the image(s) in the file.",
+          "$ref": "ImageContext"
+        },
+        "pages": {
+          "description": "Pages of the file to perform image annotation.\n\nPages starts from 1, we assume the first page of the file is page 1.\nAt most 5 pages are supported per request. Pages can be negative.\n\nPage 1 means the first page.\nPage 2 means the second page.\nPage -1 means the last page.\nPage -2 means the second to the last page.\n\nIf the file is GIF instead of PDF or TIFF, page refers to GIF frames.\n\nIf this field is empty, by default the service performs image annotation\nfor the first 5 pages of the file.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    },
+    "InputConfig": {
+      "id": "InputConfig",
+      "description": "The desired input location and metadata.",
+      "type": "object",
+      "properties": {
+        "gcsSource": {
+          "description": "The Google Cloud Storage location to read the input from.",
+          "$ref": "GcsSource"
+        },
+        "content": {
+          "description": "File content, represented as a stream of bytes.\nNote: As with all `bytes` fields, protobuffers use a pure binary\nrepresentation, whereas JSON representations use base64.\n\nCurrently, this field only works for BatchAnnotateFiles requests. It does\nnot work for AsyncBatchAnnotateFiles requests.",
+          "type": "string",
+          "format": "byte"
+        },
+        "mimeType": {
+          "description": "The type of the file. Currently only \"application\/pdf\" and \"image\/tiff\"\nare supported. Wildcards are not supported.",
+          "type": "string"
+        }
+      }
+    },
+    "GcsSource": {
+      "id": "GcsSource",
+      "description": "The Google Cloud Storage location where the input will be read from.",
+      "type": "object",
+      "properties": {
+        "uri": {
+          "description": "Google Cloud Storage URI for the input file. This must only be a\nGoogle Cloud Storage object. Wildcards are not currently supported.",
+          "type": "string"
+        }
+      }
+    },
+    "BatchAnnotateFilesResponse": {
+      "id": "BatchAnnotateFilesResponse",
+      "description": "A list of file annotation responses.",
+      "type": "object",
+      "properties": {
+        "responses": {
+          "description": "The list of file annotation responses, each response corresponding to each\nAnnotateFileRequest in BatchAnnotateFilesRequest.",
+          "type": "array",
+          "items": {
+            "$ref": "AnnotateFileResponse"
+          }
+        }
+      }
+    },
+    "AnnotateFileResponse": {
+      "id": "AnnotateFileResponse",
+      "description": "Response to a single file annotation request. A file may contain one or more\nimages, which individually have their own responses.",
+      "type": "object",
+      "properties": {
+        "inputConfig": {
+          "description": "Information about the file for which this response is generated.",
+          "$ref": "InputConfig"
+        },
+        "responses": {
+          "description": "Individual responses to images found within the file.",
+          "type": "array",
+          "items": {
+            "$ref": "AnnotateImageResponse"
+          }
+        },
+        "totalPages": {
+          "description": "This field gives the total number of pages in the file.",
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "AsyncBatchAnnotateImagesRequest": {
+      "id": "AsyncBatchAnnotateImagesRequest",
+      "description": "Request for async image annotation for a list of images.",
+      "type": "object",
+      "properties": {
+        "requests": {
+          "description": "Individual image annotation requests for this batch.",
+          "type": "array",
+          "items": {
+            "$ref": "AnnotateImageRequest"
+          }
+        },
+        "outputConfig": {
+          "description": "Required. The desired output location and metadata (e.g. format).",
+          "$ref": "OutputConfig"
+        }
+      }
+    },
+    "OutputConfig": {
+      "id": "OutputConfig",
+      "description": "The desired output location and metadata.",
+      "type": "object",
+      "properties": {
+        "gcsDestination": {
+          "description": "The Google Cloud Storage location to write the output(s) to.",
+          "$ref": "GcsDestination"
+        },
+        "batchSize": {
+          "description": "The max number of response protos to put into each output JSON file on\nGoogle Cloud Storage.\nThe valid range is [1, 100]. If not specified, the default value is 20.\n\nFor example, for one pdf file with 100 pages, 100 response protos will\nbe generated. If `batch_size` = 20, then 5 json files each\ncontaining 20 response protos will be written under the prefix\n`gcs_destination`.`uri`.\n\nCurrently, batch_size only applies to GcsDestination, with potential future\nsupport for other output configurations.",
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "GcsDestination": {
+      "id": "GcsDestination",
+      "description": "The Google Cloud Storage location where the output will be written to.",
+      "type": "object",
+      "properties": {
+        "uri": {
+          "description": "Google Cloud Storage URI prefix where the results will be stored. Results\nwill be in JSON format and preceded by its corresponding input URI prefix.\nThis field can either represent a gcs file prefix or gcs directory. In\neither case, the uri should be unique because in order to get all of the\noutput files, you will need to do a wildcard gcs search on the uri prefix\nyou provide.\n\nExamples:\n\n*    File Prefix: gs:\/\/bucket-name\/here\/filenameprefix   The output files\nwill be created in gs:\/\/bucket-name\/here\/ and the names of the\noutput files will begin with \"filenameprefix\".\n\n*    Directory Prefix: gs:\/\/bucket-name\/some\/location\/   The output files\nwill be created in gs:\/\/bucket-name\/some\/location\/ and the names of the\noutput files could be anything because there was no filename prefix\nspecified.\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
+          "type": "string"
+        }
+      }
+    },
     "AsyncBatchAnnotateFilesRequest": {
       "id": "AsyncBatchAnnotateFilesRequest",
       "description": "Multiple async file annotation requests are batched into a single service\ncall.",
@@ -1929,77 +2086,6 @@
         }
       }
     },
-    "InputConfig": {
-      "id": "InputConfig",
-      "description": "The desired input location and metadata.",
-      "type": "object",
-      "properties": {
-        "gcsSource": {
-          "description": "The Google Cloud Storage location to read the input from.",
-          "$ref": "GcsSource"
-        },
-        "mimeType": {
-          "description": "The type of the file. Currently only \"application\/pdf\" and \"image\/tiff\"\nare supported. Wildcards are not supported.",
-          "type": "string"
-        }
-      }
-    },
-    "GcsSource": {
-      "id": "GcsSource",
-      "description": "The Google Cloud Storage location where the input will be read from.",
-      "type": "object",
-      "properties": {
-        "uri": {
-          "description": "Google Cloud Storage URI for the input file. This must only be a\nGoogle Cloud Storage object. Wildcards are not currently supported.",
-          "type": "string"
-        }
-      }
-    },
-    "OutputConfig": {
-      "id": "OutputConfig",
-      "description": "The desired output location and metadata.",
-      "type": "object",
-      "properties": {
-        "gcsDestination": {
-          "description": "The Google Cloud Storage location to write the output(s) to.",
-          "$ref": "GcsDestination"
-        },
-        "batchSize": {
-          "description": "The max number of response protos to put into each output JSON file on\nGoogle Cloud Storage.\nThe valid range is [1, 100]. If not specified, the default value is 20.\n\nFor example, for one pdf file with 100 pages, 100 response protos will\nbe generated. If `batch_size` = 20, then 5 json files each\ncontaining 20 response protos will be written under the prefix\n`gcs_destination`.`uri`.\n\nCurrently, batch_size only applies to GcsDestination, with potential future\nsupport for other output configurations.",
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "GcsDestination": {
-      "id": "GcsDestination",
-      "description": "The Google Cloud Storage location where the output will be written to.",
-      "type": "object",
-      "properties": {
-        "uri": {
-          "description": "Google Cloud Storage URI where the results will be stored. Results will\nbe in JSON format and preceded by its corresponding input URI. This field\ncan either represent a single file, or a prefix for multiple outputs.\nPrefixes must end in a `\/`.\n\nExamples:\n\n*    File: gs:\/\/bucket-name\/filename.json\n*    Prefix: gs:\/\/bucket-name\/prefix\/here\/\n*    File: gs:\/\/bucket-name\/prefix\/here\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
-          "type": "string"
-        }
-      }
-    },
-    "AnnotateFileResponse": {
-      "id": "AnnotateFileResponse",
-      "description": "Response to a single file annotation request. A file may contain one or more\nimages, which individually have their own responses.",
-      "type": "object",
-      "properties": {
-        "inputConfig": {
-          "description": "Information about the file for which this response is generated.",
-          "$ref": "InputConfig"
-        },
-        "responses": {
-          "description": "Individual responses to images found within the file.",
-          "type": "array",
-          "items": {
-            "$ref": "AnnotateImageResponse"
-          }
-        }
-      }
-    },
     "AsyncBatchAnnotateFilesResponse": {
       "id": "AsyncBatchAnnotateFilesResponse",
       "description": "Response to an async batch file annotation request.",
@@ -2021,6 +2107,17 @@
       "properties": {
         "outputConfig": {
           "description": "The output location and metadata from AsyncAnnotateFileRequest.",
+          "$ref": "OutputConfig"
+        }
+      }
+    },
+    "AsyncBatchAnnotateImagesResponse": {
+      "id": "AsyncBatchAnnotateImagesResponse",
+      "description": "Response to an async batch image annotation request.",
+      "type": "object",
+      "properties": {
+        "outputConfig": {
+          "description": "The output location and metadata from AsyncBatchAnnotateImagesRequest.",
           "$ref": "OutputConfig"
         }
       }
@@ -2131,6 +2228,11 @@
           "items": {
             "$ref": "GoogleCloudVisionV1p1beta1AnnotateImageResponse"
           }
+        },
+        "totalPages": {
+          "description": "This field gives the total number of pages in the file.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -2142,6 +2244,11 @@
         "gcsSource": {
           "description": "The Google Cloud Storage location to read the input from.",
           "$ref": "GoogleCloudVisionV1p1beta1GcsSource"
+        },
+        "content": {
+          "description": "File content, represented as a stream of bytes.\nNote: As with all `bytes` fields, protobuffers use a pure binary\nrepresentation, whereas JSON representations use base64.\n\nCurrently, this field only works for BatchAnnotateFiles requests. It does\nnot work for AsyncBatchAnnotateFiles requests.",
+          "type": "string",
+          "format": "byte"
         },
         "mimeType": {
           "description": "The type of the file. Currently only \"application\/pdf\" and \"image\/tiff\"\nare supported. Wildcards are not supported.",
@@ -3274,7 +3381,7 @@
       "type": "object",
       "properties": {
         "indexTime": {
-          "description": "Timestamp of the index which provided these results. Changes made after\nthis time are not reflected in the current results.",
+          "description": "Timestamp of the index which provided these results. Products added to the\nproduct set and products removed from the product set after this time are\nnot reflected in the current results.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -3440,7 +3547,7 @@
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Google Cloud Storage URI where the results will be stored. Results will\nbe in JSON format and preceded by its corresponding input URI. This field\ncan either represent a single file, or a prefix for multiple outputs.\nPrefixes must end in a `\/`.\n\nExamples:\n\n*    File: gs:\/\/bucket-name\/filename.json\n*    Prefix: gs:\/\/bucket-name\/prefix\/here\/\n*    File: gs:\/\/bucket-name\/prefix\/here\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
+          "description": "Google Cloud Storage URI prefix where the results will be stored. Results\nwill be in JSON format and preceded by its corresponding input URI prefix.\nThis field can either represent a gcs file prefix or gcs directory. In\neither case, the uri should be unique because in order to get all of the\noutput files, you will need to do a wildcard gcs search on the uri prefix\nyou provide.\n\nExamples:\n\n*    File Prefix: gs:\/\/bucket-name\/here\/filenameprefix   The output files\nwill be created in gs:\/\/bucket-name\/here\/ and the names of the\noutput files will begin with \"filenameprefix\".\n\n*    Directory Prefix: gs:\/\/bucket-name\/some\/location\/   The output files\nwill be created in gs:\/\/bucket-name\/some\/location\/ and the names of the\noutput files could be anything because there was no filename prefix\nspecified.\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
           "type": "string"
         }
       }
@@ -3495,6 +3602,11 @@
           "items": {
             "$ref": "GoogleCloudVisionV1p2beta1AnnotateImageResponse"
           }
+        },
+        "totalPages": {
+          "description": "This field gives the total number of pages in the file.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -3506,6 +3618,11 @@
         "gcsSource": {
           "description": "The Google Cloud Storage location to read the input from.",
           "$ref": "GoogleCloudVisionV1p2beta1GcsSource"
+        },
+        "content": {
+          "description": "File content, represented as a stream of bytes.\nNote: As with all `bytes` fields, protobuffers use a pure binary\nrepresentation, whereas JSON representations use base64.\n\nCurrently, this field only works for BatchAnnotateFiles requests. It does\nnot work for AsyncBatchAnnotateFiles requests.",
+          "type": "string",
+          "format": "byte"
         },
         "mimeType": {
           "description": "The type of the file. Currently only \"application\/pdf\" and \"image\/tiff\"\nare supported. Wildcards are not supported.",
@@ -4638,7 +4755,7 @@
       "type": "object",
       "properties": {
         "indexTime": {
-          "description": "Timestamp of the index which provided these results. Changes made after\nthis time are not reflected in the current results.",
+          "description": "Timestamp of the index which provided these results. Products added to the\nproduct set and products removed from the product set after this time are\nnot reflected in the current results.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -4804,7 +4921,7 @@
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Google Cloud Storage URI where the results will be stored. Results will\nbe in JSON format and preceded by its corresponding input URI. This field\ncan either represent a single file, or a prefix for multiple outputs.\nPrefixes must end in a `\/`.\n\nExamples:\n\n*    File: gs:\/\/bucket-name\/filename.json\n*    Prefix: gs:\/\/bucket-name\/prefix\/here\/\n*    File: gs:\/\/bucket-name\/prefix\/here\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
+          "description": "Google Cloud Storage URI prefix where the results will be stored. Results\nwill be in JSON format and preceded by its corresponding input URI prefix.\nThis field can either represent a gcs file prefix or gcs directory. In\neither case, the uri should be unique because in order to get all of the\noutput files, you will need to do a wildcard gcs search on the uri prefix\nyou provide.\n\nExamples:\n\n*    File Prefix: gs:\/\/bucket-name\/here\/filenameprefix   The output files\nwill be created in gs:\/\/bucket-name\/here\/ and the names of the\noutput files will begin with \"filenameprefix\".\n\n*    Directory Prefix: gs:\/\/bucket-name\/some\/location\/   The output files\nwill be created in gs:\/\/bucket-name\/some\/location\/ and the names of the\noutput files could be anything because there was no filename prefix\nspecified.\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
           "type": "string"
         }
       }
@@ -4992,6 +5109,11 @@
           "items": {
             "$ref": "GoogleCloudVisionV1p3beta1AnnotateImageResponse"
           }
+        },
+        "totalPages": {
+          "description": "This field gives the total number of pages in the file.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -5003,6 +5125,11 @@
         "gcsSource": {
           "description": "The Google Cloud Storage location to read the input from.",
           "$ref": "GoogleCloudVisionV1p3beta1GcsSource"
+        },
+        "content": {
+          "description": "File content, represented as a stream of bytes.\nNote: As with all `bytes` fields, protobuffers use a pure binary\nrepresentation, whereas JSON representations use base64.\n\nCurrently, this field only works for BatchAnnotateFiles requests. It does\nnot work for AsyncBatchAnnotateFiles requests.",
+          "type": "string",
+          "format": "byte"
         },
         "mimeType": {
           "description": "The type of the file. Currently only \"application\/pdf\" and \"image\/tiff\"\nare supported. Wildcards are not supported.",
@@ -6080,7 +6207,7 @@
       "type": "object",
       "properties": {
         "indexTime": {
-          "description": "Timestamp of the index which provided these results. Changes made after\nthis time are not reflected in the current results.",
+          "description": "Timestamp of the index which provided these results. Products added to the\nproduct set and products removed from the product set after this time are\nnot reflected in the current results.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -6246,7 +6373,7 @@
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Google Cloud Storage URI where the results will be stored. Results will\nbe in JSON format and preceded by its corresponding input URI. This field\ncan either represent a single file, or a prefix for multiple outputs.\nPrefixes must end in a `\/`.\n\nExamples:\n\n*    File: gs:\/\/bucket-name\/filename.json\n*    Prefix: gs:\/\/bucket-name\/prefix\/here\/\n*    File: gs:\/\/bucket-name\/prefix\/here\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
+          "description": "Google Cloud Storage URI prefix where the results will be stored. Results\nwill be in JSON format and preceded by its corresponding input URI prefix.\nThis field can either represent a gcs file prefix or gcs directory. In\neither case, the uri should be unique because in order to get all of the\noutput files, you will need to do a wildcard gcs search on the uri prefix\nyou provide.\n\nExamples:\n\n*    File Prefix: gs:\/\/bucket-name\/here\/filenameprefix   The output files\nwill be created in gs:\/\/bucket-name\/here\/ and the names of the\noutput files will begin with \"filenameprefix\".\n\n*    Directory Prefix: gs:\/\/bucket-name\/some\/location\/   The output files\nwill be created in gs:\/\/bucket-name\/some\/location\/ and the names of the\noutput files could be anything because there was no filename prefix\nspecified.\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
           "type": "string"
         }
       }
@@ -7532,7 +7659,7 @@
       "type": "object",
       "properties": {
         "indexTime": {
-          "description": "Timestamp of the index which provided these results. Changes made after\nthis time are not reflected in the current results.",
+          "description": "Timestamp of the index which provided these results. Products added to the\nproduct set and products removed from the product set after this time are\nnot reflected in the current results.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -7698,7 +7825,7 @@
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Google Cloud Storage URI where the results will be stored. Results will\nbe in JSON format and preceded by its corresponding input URI. This field\ncan either represent a single file, or a prefix for multiple outputs.\nPrefixes must end in a `\/`.\n\nExamples:\n\n*    File: gs:\/\/bucket-name\/filename.json\n*    Prefix: gs:\/\/bucket-name\/prefix\/here\/\n*    File: gs:\/\/bucket-name\/prefix\/here\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
+          "description": "Google Cloud Storage URI prefix where the results will be stored. Results\nwill be in JSON format and preceded by its corresponding input URI prefix.\nThis field can either represent a gcs file prefix or gcs directory. In\neither case, the uri should be unique because in order to get all of the\noutput files, you will need to do a wildcard gcs search on the uri prefix\nyou provide.\n\nExamples:\n\n*    File Prefix: gs:\/\/bucket-name\/here\/filenameprefix   The output files\nwill be created in gs:\/\/bucket-name\/here\/ and the names of the\noutput files will begin with \"filenameprefix\".\n\n*    Directory Prefix: gs:\/\/bucket-name\/some\/location\/   The output files\nwill be created in gs:\/\/bucket-name\/some\/location\/ and the names of the\noutput files could be anything because there was no filename prefix\nspecified.\n\nIf multiple outputs, each response is still AnnotateFileResponse, each of\nwhich contains some subset of the full list of AnnotateImageResponse.\nMultiple outputs can happen if, for example, the output JSON is too large\nand overflows into multiple sharded files.",
           "type": "string"
         }
       }
@@ -7892,21 +8019,21 @@
         }
       }
     },
-    "locations": {
+    "projects": {
       "resources": {
         "operations": {
           "methods": {
             "get": {
-              "id": "vision.locations.operations.get",
+              "id": "vision.projects.operations.get",
               "path": "v1/{+name}",
-              "flatPath": "v1/locations/{locationsId}/operations/{operationsId}",
+              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}",
               "httpMethod": "GET",
               "parameters": {
                 "name": {
                   "description": "The name of the operation resource.",
                   "location": "path",
                   "required": true,
-                  "pattern": "^locations\/[^\/]+\/operations\/[^\/]+$",
+                  "pattern": "^projects\/[^\/]+\/operations\/[^\/]+$",
                   "type": "string"
                 }
               },
@@ -7923,13 +8050,39 @@
               "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
             }
           }
-        }
-      }
-    },
-    "projects": {
-      "resources": {
+        },
         "locations": {
           "resources": {
+            "operations": {
+              "methods": {
+                "get": {
+                  "id": "vision.projects.locations.operations.get",
+                  "path": "v1/{+name}",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/operations/{operationsId}",
+                  "httpMethod": "GET",
+                  "parameters": {
+                    "name": {
+                      "description": "The name of the operation resource.",
+                      "location": "path",
+                      "required": true,
+                      "pattern": "^projects\/[^\/]+\/locations\/[^\/]+\/operations\/[^\/]+$",
+                      "type": "string"
+                    }
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "response": {
+                    "$ref": "Operation"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform",
+                    "https://www.googleapis.com/auth/cloud-vision"
+                  ],
+                  "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
+                }
+              }
+            },
             "productSets": {
               "methods": {
                 "create": {
@@ -8088,7 +8241,7 @@
                     "https://www.googleapis.com/auth/cloud-platform",
                     "https://www.googleapis.com/auth/cloud-vision"
                   ],
-                  "description": "Permanently deletes a ProductSet. Products and ReferenceImages in the\nProductSet are not deleted.\n\nThe actual image files are not deleted from Google Cloud Storage.\n\nPossible errors:\n\n* Returns NOT_FOUND if the ProductSet does not exist."
+                  "description": "Permanently deletes a ProductSet. Products and ReferenceImages in the\nProductSet are not deleted.\n\nThe actual image files are not deleted from Google Cloud Storage.\n\nPossible errors:\n\nnone"
                 },
                 "addProduct": {
                   "id": "vision.projects.locations.productSets.addProduct",
@@ -8146,7 +8299,7 @@
                     "https://www.googleapis.com/auth/cloud-platform",
                     "https://www.googleapis.com/auth/cloud-vision"
                   ],
-                  "description": "Removes a Product from the specified ProductSet.\n\nPossible errors:\n\n* Returns NOT_FOUND If the Product is not found under the ProductSet."
+                  "description": "Removes a Product from the specified ProductSet.\n\nPossible errors:\n\nnone"
                 },
                 "import": {
                   "id": "vision.projects.locations.productSets.import",
@@ -8381,7 +8534,7 @@
                     "https://www.googleapis.com/auth/cloud-platform",
                     "https://www.googleapis.com/auth/cloud-vision"
                   ],
-                  "description": "Permanently deletes a product and its reference images.\n\nMetadata of the product and all its images will be deleted right away, but\nsearch queries against ProductSets containing the product may still work\nuntil all related caches are refreshed.\n\nPossible errors:\n\n* Returns NOT_FOUND if the product does not exist."
+                  "description": "Permanently deletes a product and its reference images.\n\nMetadata of the product and all its images will be deleted right away, but\nsearch queries against ProductSets containing the product may still work\nuntil all related caches are refreshed.\n\nPossible errors:\n\nnone"
                 }
               }
               ,
@@ -8446,7 +8599,7 @@
                         "https://www.googleapis.com/auth/cloud-platform",
                         "https://www.googleapis.com/auth/cloud-vision"
                       ],
-                      "description": "Permanently deletes a reference image.\n\nThe image metadata will be deleted right away, but search queries\nagainst ProductSets containing the image may still work until all related\ncaches are refreshed.\n\nThe actual image files are not deleted from Google Cloud Storage.\n\nPossible errors:\n\n* Returns NOT_FOUND if the reference image does not exist."
+                      "description": "Permanently deletes a reference image.\n\nThe image metadata will be deleted right away, but search queries\nagainst ProductSets containing the image may still work until all related\ncaches are refreshed.\n\nThe actual image files are not deleted from Google Cloud Storage.\n\nPossible errors:\n\nnone"
                     },
                     "list": {
                       "id": "vision.projects.locations.products.referenceImages.list",
@@ -8519,6 +8672,40 @@
         }
       }
     },
+    "locations": {
+      "resources": {
+        "operations": {
+          "methods": {
+            "get": {
+              "id": "vision.locations.operations.get",
+              "path": "v1/{+name}",
+              "flatPath": "v1/locations/{locationsId}/operations/{operationsId}",
+              "httpMethod": "GET",
+              "parameters": {
+                "name": {
+                  "description": "The name of the operation resource.",
+                  "location": "path",
+                  "required": true,
+                  "pattern": "^locations\/[^\/]+\/operations\/[^\/]+$",
+                  "type": "string"
+                }
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "response": {
+                "$ref": "Operation"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/cloud-vision"
+              ],
+              "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
+            }
+          }
+        }
+      }
+    },
     "images": {
       "methods": {
         "annotate": {
@@ -8541,11 +8728,53 @@
             "https://www.googleapis.com/auth/cloud-vision"
           ],
           "description": "Run image detection and annotation for a batch of images."
+        },
+        "asyncBatchAnnotate": {
+          "id": "vision.images.asyncBatchAnnotate",
+          "path": "v1/images:asyncBatchAnnotate",
+          "flatPath": "v1/images:asyncBatchAnnotate",
+          "httpMethod": "POST",
+          "parameters": {
+          },
+          "parameterOrder": [
+          ],
+          "request": {
+            "$ref": "AsyncBatchAnnotateImagesRequest"
+          },
+          "response": {
+            "$ref": "Operation"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/cloud-vision"
+          ],
+          "description": "Run asynchronous image detection and annotation for a list of images.\n\nProgress and results can be retrieved through the\n`google.longrunning.Operations` interface.\n`Operation.metadata` contains `OperationMetadata` (metadata).\n`Operation.response` contains `AsyncBatchAnnotateImagesResponse` (results).\n\nThis service will write image annotation outputs to json files in customer\nGCS bucket, each json file containing BatchAnnotateImagesResponse proto."
         }
       }
     },
     "files": {
       "methods": {
+        "annotate": {
+          "id": "vision.files.annotate",
+          "path": "v1/files:annotate",
+          "flatPath": "v1/files:annotate",
+          "httpMethod": "POST",
+          "parameters": {
+          },
+          "parameterOrder": [
+          ],
+          "request": {
+            "$ref": "BatchAnnotateFilesRequest"
+          },
+          "response": {
+            "$ref": "BatchAnnotateFilesResponse"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/cloud-vision"
+          ],
+          "description": "Service that performs image detection and annotation for a batch of files.\nNow only \"application\/pdf\", \"image\/tiff\" and \"image\/gif\" are supported.\n\nThis service will extract at most 5 (customers can specify which 5 in\nAnnotateFileRequest.pages) frames (gif) or pages (pdf or tiff) from each\nfile provided and perform detection and annotation for each image\nextracted."
+        },
         "asyncBatchAnnotate": {
           "id": "vision.files.asyncBatchAnnotate",
           "path": "v1/files:asyncBatchAnnotate",

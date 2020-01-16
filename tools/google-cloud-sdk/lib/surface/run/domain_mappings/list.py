@@ -55,12 +55,14 @@ class List(base.ListCommand):
         namespace_presentation]).AddToParser(parser)
     parser.display_info.AddFormat(
         """table(
+        metadata.name:label=DOMAIN,
         route_name:label=SERVICE,
-        region:label=REGION,
-        metadata.name:label=DOMAIN)""")
+        region:label=REGION)""")
 
   def Run(self, args):
     """List available domain mappings."""
+    if args.uri:
+      raise flags.ArgumentError('--uri flag is not supported for this resource')
     conn_context = connection_context.GetConnectionContext(args)
     namespace_ref = args.CONCEPTS.namespace.Parse()
     with serverless_operations.Connect(conn_context) as client:

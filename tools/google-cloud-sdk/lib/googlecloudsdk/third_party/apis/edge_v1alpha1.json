@@ -293,6 +293,10 @@
               "USB"
             ]
           }
+        },
+        "runtimeVersion": {
+          "description": "Version of Edge Runtime.",
+          "type": "string"
         }
       }
     },
@@ -302,26 +306,26 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Name of the edge function. It must be unique among the edge functions\nrunning on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/functions\/f1`.",
+          "description": "Required. Name of the edge function. It must be unique among the edge\nfunctions running on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/functions\/f1`.\nThe last token of the name (For example `f1`) should be no more than 256\nbytes, and should start with lowercase letter or a number, and can contain\nlowercase alpha-numeric characters and following characters: .-_. More\nstrictly, it must match the regular expression [a-z0-9]+(?:._-+)*",
           "type": "string"
         },
         "description": {
-          "description": "Description of the edge function.",
+          "description": "Description of the edge function.\nMax 8192 bytes.",
           "type": "string"
         },
         "dockerImageUri": {
-          "description": "URI that points to edge function in Google Container Registry.",
+          "description": "Required. URI that points to edge function in Google Container Registry.\nMax 8192 bytes.",
           "type": "string"
         },
         "environmentVariables": {
-          "description": "The environment_variables key-value pairs will be set as environment\nvariable when the docker container is started.",
+          "description": "The environment_variables key-value pairs will be set as environment\nvariable when the docker container is started.\nKey cannot start with \"X_GOOGLE_\", and can not contain '='.\nMax 500 key-value pair. Max key\/value length is 32768 bytes.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "availableMemoryMb": {
-          "description": "Maximum memory size assigned to the docker container, in MB.",
+          "description": "Maximum memory size assigned to the docker container, in MB.\nDefault value is 128 if unspecified or equals to 0.",
           "type": "integer",
           "format": "int32"
         },
@@ -339,6 +343,13 @@
             "$ref": "DeviceBinding"
           }
         },
+        "portBindings": {
+          "description": "List of port bindings.",
+          "type": "array",
+          "items": {
+            "$ref": "PortBinding"
+          }
+        },
         "inputTopics": {
           "description": "List of input topics.",
           "type": "array",
@@ -354,7 +365,7 @@
           }
         },
         "functionType": {
-          "description": "Type of the function. A function may be invoked when a message is\npublished(on demand) or be running for stream processing.",
+          "description": "DEPRECATED: Specified function type will be ignored. Function type should\nbe specified when building a docker image for the function.\nType of the function. A function may be invoked when a message is\npublished(on demand) or be running for stream processing.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "If a function is of type ON_DEMAND, the function will be invoked only when\na message is published to one of `input_topics`.",
@@ -372,7 +383,7 @@
           "type": "string"
         },
         "requestTimeout": {
-          "description": "Timeout for one request to this edge function.",
+          "description": "Timeout for one request to this edge function. Default value is 1 minute if\nnot specified or equals to 0.",
           "type": "string",
           "format": "google-duration"
         },
@@ -394,15 +405,15 @@
       "type": "object",
       "properties": {
         "source": {
-          "description": "Absolute path to the resource of the edge device to be bound.",
+          "description": "Required. Absolute path to the resource of the edge device to be bound.\nShould be valid POSIX path, and can contain up to 1024 bytes.",
           "type": "string"
         },
         "destination": {
-          "description": "Absolute path where the resource is bound in the function or container.",
+          "description": "Absolute path where the resource is bound in the function or\ncontainer. If empty, the value in 'source' field is used.\nShould be valid POSIX path, and can contain up to 1024 bytes.",
           "type": "string"
         },
         "readOnly": {
-          "description": "If true, sandboxed environment only can read the path.",
+          "description": "If true, sandboxed environment only can read the path.\nDefault is false.",
           "type": "boolean"
         }
       }
@@ -413,16 +424,63 @@
       "type": "object",
       "properties": {
         "source": {
-          "description": "Absolute path to the resource of the edge device to be bound.",
+          "description": "Required. Absolute path to the resource of the edge device to be bound.\nShould be valid POSIX path, and can contain up to 1024 bytes.",
           "type": "string"
         },
         "destination": {
-          "description": "Absolute path where the resource is bound in the function or container.",
+          "description": "Required. Absolute path where the resource is bound in the function or\ncontainer. If empty, the value in 'source' field is used.\nShould be valid POSIX path, and can contain up to 1024 bytes.",
           "type": "string"
         },
         "cgroupPermissions": {
-          "description": "cgroup permissions that will be given to the resource.",
+          "description": "Required. cgroup permissions that will be given to the resource.\nShould be a composition of r (read), w (write), and m (mknod).",
           "type": "string"
+        }
+      }
+    },
+    "PortBinding": {
+      "id": "PortBinding",
+      "description": "Defines the publish information of the docker container.",
+      "type": "object",
+      "properties": {
+        "hostIp": {
+          "description": "Should be ip address of host machine. For example, `127.0.0.1`. If\nspecified, host_port_start and host_port_end also should be specified.",
+          "type": "string"
+        },
+        "hostPortStart": {
+          "description": "The starting number of host port mapping range. Published container ports\nwill be mapped to the host ports in this range.\nIf not specified, host_port_end should not be specified, and container\nports will be mapped to randomly selected host ports. Should be between\n1-65535.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "hostPortEnd": {
+          "description": "The ending number of host port mapping range. Should be between 1-65535.\nIf specified, should be equals to or larger than host_port_start.\nIf not specified, host_port_start should not be specified.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "containerPortStart": {
+          "description": "Required. The starting number of container port mapping range. All the\nports between container_port_start and container_port_end will be published\nto host.  Should be between 1-65535.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "containerPortEnd": {
+          "description": "Required. The ending number of container port mapping range. Should be\nbetween 1-65535, and equals to or larger than container_port_start.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "protocol": {
+          "description": "Protocol for communication. TCP will be used if not specified.",
+          "enumDescriptions": [
+            "Default value, used when its value unspecified.",
+            "TCP. Edge runtime will use TCP if unspecified.",
+            "UDP",
+            "SCTP"
+          ],
+          "type": "string",
+          "enum": [
+            "PROTOCOL_UNSPECIFIED",
+            "TCP",
+            "UDP",
+            "SCTP"
+          ]
         }
       }
     },
@@ -432,11 +490,11 @@
       "type": "object",
       "properties": {
         "topic": {
-          "description": "The actual topic string.",
+          "description": "Required. The actual topic string. Should not have mqtt wildcard\ncharacters(+#), comma and colon. Cannot start with dollar sign.\nSpecifically must match with following regular expression:\n[^$+#,:]+[^+#,:]*\nMax 1024 bytes.",
           "type": "string"
         },
         "id": {
-          "description": "Optional name associated with this topic.",
+          "description": "Optional name associated with this topic. Can contain alpha-numeric\ncharacters, hyphen and underscore only. Max 1024 bytes.\nSpecifically must match with following regular expression:\n[a-zA-Z0-9-_]+",
           "type": "string"
         }
       }
@@ -459,65 +517,32 @@
         }
       }
     },
-    "ListDeployableFunctionsResponse": {
-      "id": "ListDeployableFunctionsResponse",
-      "description": "Response for 'ListDeployableFunctions'.",
-      "type": "object",
-      "properties": {
-        "deployableFunctions": {
-          "description": "List of deployable functions.",
-          "type": "array",
-          "items": {
-            "$ref": "DeployableFunction"
-          }
-        },
-        "nextPageToken": {
-          "description": "Pagination token for next page of results.",
-          "type": "string"
-        }
-      }
-    },
-    "DeployableFunction": {
-      "id": "DeployableFunction",
-      "description": "Indicates an edge function in Google Container Registry.",
-      "type": "object",
-      "properties": {
-        "container": {
-          "description": "Output only. Name of the container.",
-          "type": "string"
-        },
-        "dockerImageUri": {
-          "description": "Output only. URI of the container.",
-          "type": "string"
-        }
-      }
-    },
     "Container": {
       "id": "Container",
       "description": "Data used to control Container related things in Edge service.",
       "type": "object",
       "properties": {
         "name": {
-          "description": "Name of edge container. It must be unique among the edge containers running\non the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/containers\/c1`.",
+          "description": "Required. Name of edge container. It must be unique among the edge\ncontainers running on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/containers\/c1`.\nThe last token of the name (For example `c1`) should be no more than 256\nbytes, and should start with lowercase letter or a number, and can contain\nlowercase alpha-numeric characters and following characters: .-_. More\nstrictly, it must match the regular expression [a-z0-9]+(?:._-+)*",
           "type": "string"
         },
         "description": {
-          "description": "Description of the edge container.",
+          "description": "Description of the edge container.\nMax 8192 bytes.",
           "type": "string"
         },
         "dockerImageUri": {
-          "description": "URI that points to edge container in Google Container Registry.",
+          "description": "Required. URI that points to edge container in Google Container Registry.\nMax 8192 bytes.",
           "type": "string"
         },
         "environmentVariables": {
-          "description": "The environment_variables key-value pairs will be set as environment\nvariable when the docker container is started.",
+          "description": "Required. The environment_variables key-value pairs will be set as\nenvironment variable when the docker container is started.\nKey cannot start with \"X_GOOGLE_\", and can not contain '='.\nMax 500 key-value pair. Max key\/value length is 32768 bytes.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "availableMemoryMb": {
-          "description": "Maximum memory size assigned to the docker container, in MB.",
+          "description": "Maximum memory size assigned to the docker container, in MB.\nDefault value is 2048 if unspecified or equals to 0.",
           "type": "integer",
           "format": "int32"
         },
@@ -535,6 +560,13 @@
             "$ref": "DeviceBinding"
           }
         },
+        "portBindings": {
+          "description": "List of port bindings.",
+          "type": "array",
+          "items": {
+            "$ref": "PortBinding"
+          }
+        },
         "inputTopics": {
           "description": "List of input topics.",
           "type": "array",
@@ -550,7 +582,7 @@
           }
         },
         "autostart": {
-          "description": "If autostart is true, this container will be started right after the edge\nconfig is deployed to device.",
+          "description": "If autostart is true, this container will be started right after the edge\nconfig is deployed to device.\nDefault is true.",
           "type": "boolean"
         },
         "updateTime": {
@@ -589,15 +621,15 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Name of the ML model. It must be unique among the ML models running on the\nsame edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/mlModels\/m1`.",
+          "description": "Required. Name of the ML model. It must be unique among the ML models\nrunning on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/mlModels\/m1`.\nThe last token of the name (For example `m1`) should be no more than 256\nbytes, and should start with a letter followed by up to letters, numbers,\nhyphens or underscores, and cannot end with a hyphen or an underscore.",
           "type": "string"
         },
         "description": {
-          "description": "Description of the edge ml model.",
+          "description": "Description of the edge ml model.\nMax 8192 bytes.",
           "type": "string"
         },
         "modelUri": {
-          "description": "URI that points to ML model file of Google Cloud Storage.",
+          "description": "Required. URI that points to ML model file of Google Cloud Storage.\nMax 8192 bytes.",
           "type": "string"
         },
         "numTfliteThreads": {
@@ -634,7 +666,7 @@
           }
         },
         "acceleratorType": {
-          "description": "Type of device accelerator",
+          "description": "Type of device accelerator.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "TPU, tensor processing unit.",
@@ -648,11 +680,11 @@
           ]
         },
         "framework": {
-          "description": "Type of framework",
+          "description": "Type of framework.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
-            "TFlite framework",
-            "Scikit-learn framework"
+            "TFlite framework.",
+            "Scikit-learn framework."
           ],
           "type": "string",
           "enum": [
@@ -661,8 +693,12 @@
             "SCIKIT_LEARN"
           ]
         },
+        "samplingInfo": {
+          "description": "Sampling information for sampling and uploading ML inference results.",
+          "$ref": "MlSamplingInfo"
+        },
         "requestTimeout": {
-          "description": "Timeout for one request to this ML model.",
+          "description": "Timeout for one request to this ML model. Default value is 1 minute if not\nspecified or equals to 0.",
           "type": "string",
           "format": "google-duration"
         },
@@ -684,11 +720,11 @@
       "type": "object",
       "properties": {
         "tensorName": {
-          "description": "Name of the tensor.",
+          "description": "Required. Name of the tensor.\nCan contain up to 1024 bytes.",
           "type": "string"
         },
         "dimensions": {
-          "description": "Dimension description of the tensor.",
+          "description": "Required. Dimension description of the tensor.",
           "type": "array",
           "items": {
             "type": "integer",
@@ -696,7 +732,7 @@
           }
         },
         "inferenceType": {
-          "description": "Type of the tensor.",
+          "description": "Required. Type of the tensor.\nCannot be unspecified.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "Quantized unsigned 8bit int.",
@@ -710,7 +746,63 @@
           ]
         },
         "index": {
-          "description": "Index of the tensor in the input or output layer.",
+          "description": "Required. Index of the tensor in the input or output layer.",
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "MlSamplingInfo": {
+      "id": "MlSamplingInfo",
+      "description": "Data used to control retraining process of this MlModel.",
+      "type": "object",
+      "properties": {
+        "defaultPolicy": {
+          "description": "The default policy for all classes.",
+          "$ref": "MlSamplingPolicy"
+        },
+        "keepSampleMax": {
+          "description": "The number of maximum samples on local storage. default=10000.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "labelFileUri": {
+          "description": "Required. The dataset label text file uri. Must start with 'gs:\/\/' and\ncan contain up to 8192 bytes.",
+          "type": "string"
+        },
+        "targetUri": {
+          "description": "Required. The target uri where the sampled data will be located. Must start\nwith 'gs:\/\/ and can contain up to 8192 bytes.",
+          "type": "string"
+        },
+        "datasetName": {
+          "description": "Required. The dataset name used in AutoML. Can contain alphabets, digits\nand underscores. Max 1024 bytes.",
+          "type": "string"
+        },
+        "classPolicy": {
+          "description": "The policies to specify sampling strategy for each class.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "MlSamplingPolicy"
+          }
+        },
+        "tag": {
+          "description": "Required. tag for sampled data used for uploading. Can contain alphabets,\ndigits and underscores. Max 1024 bytes.",
+          "type": "string"
+        }
+      }
+    },
+    "MlSamplingPolicy": {
+      "id": "MlSamplingPolicy",
+      "description": "Data used to control the sampling process of the ML inference results.",
+      "type": "object",
+      "properties": {
+        "samplingRate": {
+          "description": "The default rate to sample a target data. default=0.1 for 10% sampling.",
+          "type": "number",
+          "format": "float"
+        },
+        "timeDelaySec": {
+          "description": "The time delay between sampling in sec. default=0 for 0 sec.",
           "type": "integer",
           "format": "int32"
         }
@@ -740,11 +832,11 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "The name of the topic bridging table resource.",
+          "description": "Required. The name of the topic bridging table resource.\nShould be identical with the name of the device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0`.",
           "type": "string"
         },
         "rules": {
-          "description": "List of topic bridging rules.",
+          "description": "Required. List of topic bridging rules.",
           "type": "array",
           "items": {
             "$ref": "Rule"
@@ -763,7 +855,7 @@
       "type": "object",
       "properties": {
         "sourceDomain": {
-          "description": "The source of the messages to be rewritten.",
+          "description": "Required. The source of the messages to be rewritten.\nCannot be unspecified.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "Cloud",
@@ -777,11 +869,11 @@
           ]
         },
         "sourceFilter": {
-          "description": "Indicates the topic filter of the messages to apply this rule.",
+          "description": "Required. Indicates the topic filter of the messages to apply this rule.\nMax 1024 bytes.",
           "type": "string"
         },
         "operation": {
-          "description": "Indicates which action will be applied. If FORWARD, the messages will be\nimported from cloud to edge or exported from edge to cloud. If REWRITE,\nthe messages will be republished within the edge device with new topic\nname, that is defined in `rewrite_topic_name`.",
+          "description": "Required. Indicates which action will be applied. If FORWARD, the\nmessages will be imported from cloud to edge or exported from edge to\ncloud. If REWRITE, the messages will be republished within the edge\ndevice with new topic name, that is defined in `rewrite_topic_name`.\nCannot be unspecified.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "Forward the topic without changing the topic.",
@@ -795,7 +887,7 @@
           ]
         },
         "destinationDomain": {
-          "description": "The destination of the messages to be republished.",
+          "description": "Required. The destination of the messages to be republished.\nCannot be unspecified.",
           "enumDescriptions": [
             "Default value, used when its value unspecified.",
             "Cloud",
@@ -809,7 +901,7 @@
           ]
         },
         "rewriteTopicName": {
-          "description": "The new topic name to be rewritten if the operation is REWRITE. Will be\nignored if operation is FORWARD.",
+          "description": "The new topic name to be rewritten if the operation is REWRITE. Will be\nignored if operation is FORWARD.\nMax 1024 bytes.",
           "type": "string"
         }
       }
@@ -931,7 +1023,7 @@
                       "httpMethod": "PUT",
                       "parameters": {
                         "name": {
-                          "description": "The name of the topic bridging table resource.",
+                          "description": "Required. The name of the topic bridging table resource.\nShould be identical with the name of the device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0`.",
                           "location": "path",
                           "required": true,
                           "pattern": "^projects\/[^\/]+\/locations\/[^\/]+\/registries\/[^\/]+\/devices\/[^\/]+$",
@@ -996,7 +1088,7 @@
                           "httpMethod": "PATCH",
                           "parameters": {
                             "name": {
-                              "description": "Name of the edge function. It must be unique among the edge functions\nrunning on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/functions\/f1`.",
+                              "description": "Required. Name of the edge function. It must be unique among the edge\nfunctions running on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/functions\/f1`.\nThe last token of the name (For example `f1`) should be no more than 256\nbytes, and should start with lowercase letter or a number, and can contain\nlowercase alpha-numeric characters and following characters: .-_. More\nstrictly, it must match the regular expression [a-z0-9]+(?:._-+)*",
                               "location": "path",
                               "required": true,
                               "pattern": "^projects\/[^\/]+\/locations\/[^\/]+\/registries\/[^\/]+\/devices\/[^\/]+\/functions\/[^\/]+$",
@@ -1164,7 +1256,7 @@
                           "httpMethod": "PATCH",
                           "parameters": {
                             "name": {
-                              "description": "Name of edge container. It must be unique among the edge containers running\non the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/containers\/c1`.",
+                              "description": "Required. Name of edge container. It must be unique among the edge\ncontainers running on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/containers\/c1`.\nThe last token of the name (For example `c1`) should be no more than 256\nbytes, and should start with lowercase letter or a number, and can contain\nlowercase alpha-numeric characters and following characters: .-_. More\nstrictly, it must match the regular expression [a-z0-9]+(?:._-+)*",
                               "location": "path",
                               "required": true,
                               "pattern": "^projects\/[^\/]+\/locations\/[^\/]+\/registries\/[^\/]+\/devices\/[^\/]+\/containers\/[^\/]+$",
@@ -1332,7 +1424,7 @@
                           "httpMethod": "PATCH",
                           "parameters": {
                             "name": {
-                              "description": "Name of the ML model. It must be unique among the ML models running on the\nsame edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/mlModels\/m1`.",
+                              "description": "Required. Name of the ML model. It must be unique among the ML models\nrunning on the same edge device. For example,\n`projects\/p1\/locations\/us-central1\/registries\/registry0\/devices\/dev0\/mlModels\/m1`.\nThe last token of the name (For example `m1`) should be no more than 256\nbytes, and should start with a letter followed by up to letters, numbers,\nhyphens or underscores, and cannot end with a hyphen or an underscore.",
                               "location": "path",
                               "required": true,
                               "pattern": "^projects\/[^\/]+\/locations\/[^\/]+\/registries\/[^\/]+\/devices\/[^\/]+\/mlModels\/[^\/]+$",
@@ -1464,48 +1556,6 @@
                   }
                 }
               }
-            }
-          }
-        },
-        "deployableFunctions": {
-          "methods": {
-            "list": {
-              "id": "edge.projects.deployableFunctions.list",
-              "path": "v1alpha1/{+parent}/deployableFunctions",
-              "flatPath": "v1alpha1/projects/{projectsId}/deployableFunctions",
-              "httpMethod": "GET",
-              "parameters": {
-                "parent": {
-                  "description": "The project name. The list of deployable functions in given project will be\nreturned.",
-                  "location": "path",
-                  "required": true,
-                  "pattern": "^projects\/[^\/]+$",
-                  "type": "string"
-                },
-                "pageSize": {
-                  "description": "The standard list page size.",
-                  "location": "query",
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "pageToken": {
-                  "description": "Pagination token for next page of results.",
-                  "location": "query",
-                  "type": "string"
-                }
-              },
-              "parameterOrder": [
-                "parent"
-              ],
-              "response": {
-                "$ref": "ListDeployableFunctionsResponse"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/cloudiot",
-                "https://www.googleapis.com/auth/devstorage.read_write"
-              ],
-              "description": "Returns the list of edge functions in Google Container Registry."
             }
           }
         }

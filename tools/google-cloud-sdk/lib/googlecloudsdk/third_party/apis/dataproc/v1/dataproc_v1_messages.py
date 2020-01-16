@@ -38,10 +38,10 @@ class Binding(_messages.Message):
   r"""Associates members with a role.
 
   Fields:
-    condition: Unimplemented. The condition that is associated with this
-      binding. NOTE: an unsatisfied condition will not allow user access via
-      current binding. Different bindings, including their conditions, are
-      examined independently.
+    condition: The condition that is associated with this binding. NOTE: An
+      unsatisfied condition will not allow user access via current binding.
+      Different bindings, including their conditions, are examined
+      independently.
     members: Specifies the identities requesting access for a Cloud Platform
       resource. members can have the following values: allUsers: A special
       identifier that represents anyone who is  on the internet; with or
@@ -52,9 +52,9 @@ class Binding(_messages.Message):
       serviceAccount:{emailid}: An email address that represents a service
       account. For example, my-other-app@appspot.gserviceaccount.com.
       group:{emailid}: An email address that represents a Google group.  For
-      example, admins@example.com. domain:{domain}: A Google Apps domain name
-      that represents all the  users of that domain. For example, google.com
-      or example.com.
+      example, admins@example.com. domain:{domain}: The G Suite domain
+      (primary) that represents all the  users of that domain. For example,
+      google.com or example.com.
     role: Role that is assigned to members. For example, roles/viewer,
       roles/editor, or roles/owner.
   """
@@ -145,14 +145,15 @@ class ClusterConfig(_messages.Message):
   r"""The cluster config.
 
   Fields:
-    configBucket: Optional. A Cloud Storage staging bucket used for sharing
-      generated SSH keys and config. If you do not specify a staging bucket,
-      Cloud Dataproc will determine an appropriate Cloud Storage location (US,
-      ASIA, or EU) for your cluster's staging bucket according to the Google
-      Compute Engine zone where your cluster is deployed, and then it will
-      create and manage this project-level, per-location bucket for you.
+    configBucket: Optional. A Google Cloud Storage bucket used to stage job
+      dependencies, config files, and job driver console output. If you do not
+      specify a staging bucket, Cloud Dataproc will determine a Cloud Storage
+      location (US, ASIA, or EU) for your cluster's staging bucket according
+      to the Google Compute Engine zone where your cluster is deployed, and
+      then create and manage this project-level, per-location bucket (see
+      Cloud Dataproc staging bucket).
     encryptionConfig: Optional. Encryption settings for the cluster.
-    gceClusterConfig: Required. The shared Compute Engine config settings for
+    gceClusterConfig: Optional. The shared Compute Engine config settings for
       all instances in a cluster.
     initializationActions: Optional. Commands to execute on each node after
       config is completed. By default, executables are run on master and all
@@ -166,6 +167,7 @@ class ClusterConfig(_messages.Message):
       instance in a cluster.
     secondaryWorkerConfig: Optional. The Compute Engine config settings for
       additional worker instances in a cluster.
+    securityConfig: Optional. Security settings for the cluster.
     softwareConfig: Optional. The config settings for software inside the
       cluster.
     workerConfig: Optional. The Compute Engine config settings for worker
@@ -178,8 +180,9 @@ class ClusterConfig(_messages.Message):
   initializationActions = _messages.MessageField('NodeInitializationAction', 4, repeated=True)
   masterConfig = _messages.MessageField('InstanceGroupConfig', 5)
   secondaryWorkerConfig = _messages.MessageField('InstanceGroupConfig', 6)
-  softwareConfig = _messages.MessageField('SoftwareConfig', 7)
-  workerConfig = _messages.MessageField('InstanceGroupConfig', 8)
+  securityConfig = _messages.MessageField('SecurityConfig', 7)
+  softwareConfig = _messages.MessageField('SoftwareConfig', 8)
+  workerConfig = _messages.MessageField('InstanceGroupConfig', 9)
 
 
 class ClusterMetrics(_messages.Message):
@@ -1390,7 +1393,8 @@ class GceClusterConfig(_messages.Message):
       machine communications. Cannot be specified with network_uri.A full URL,
       partial URI, or short name are valid. Examples:
       https://www.googleapis.com/compute/v1/projects/[project_id]/regions/us-
-      east1/sub0 projects/[project_id]/regions/us-east1/sub0 sub0
+      east1/subnetworks/sub0 projects/[project_id]/regions/us-
+      east1/subnetworks/sub0 sub0
     tags: The Compute Engine tags to add to all instances (see Tagging
       instances).
     zoneUri: Optional. The zone where the Compute Engine cluster will be
@@ -1922,6 +1926,64 @@ class JobStatus(_messages.Message):
   state = _messages.EnumField('StateValueValuesEnum', 2)
   stateStartTime = _messages.StringField(3)
   substate = _messages.EnumField('SubstateValueValuesEnum', 4)
+
+
+class KerberosConfig(_messages.Message):
+  r"""Specifies Kerberos related configuration.
+
+  Fields:
+    crossRealmTrustAdminServer: Optional. The admin server (IP or hostname)
+      for the remote trusted realm in a cross realm trust relationship.
+    crossRealmTrustKdc: Optional. The KDC (IP or hostname) for the remote
+      trusted realm in a cross realm trust relationship.
+    crossRealmTrustRealm: Optional. The remote realm the Dataproc on-cluster
+      KDC will trust, should the user enable cross realm trust.
+    crossRealmTrustSharedPasswordUri: Optional. The Cloud Storage URI of a KMS
+      encrypted file containing the shared password between the on-cluster
+      Kerberos realm and the remote trusted realm, in a cross realm trust
+      relationship.
+    enableKerberos: Optional. Flag to indicate whether to Kerberize the
+      cluster.
+    kdcDbKeyUri: Optional. The Cloud Storage URI of a KMS encrypted file
+      containing the master key of the KDC database.
+    keyPasswordUri: Optional. The Cloud Storage URI of a KMS encrypted file
+      containing the password to the user provided key. For the self-signed
+      certificate, this password is generated by Dataproc.
+    keystorePasswordUri: Optional. The Cloud Storage URI of a KMS encrypted
+      file containing the password to the user provided keystore. For the
+      self-signed certificate, this password is generated by Dataproc.
+    keystoreUri: Optional. The Cloud Storage URI of the keystore file used for
+      SSL encryption. If not provided, Dataproc will provide a self-signed
+      certificate.
+    kmsKeyUri: Required. The uri of the KMS key used to encrypt various
+      sensitive files.
+    rootPrincipalPasswordUri: Required. The Cloud Storage URI of a KMS
+      encrypted file containing the root principal password.
+    tgtLifetimeHours: Optional. The lifetime of the ticket granting ticket, in
+      hours. If not specified, or user specifies 0, then default value 10 will
+      be used.
+    truststorePasswordUri: Optional. The Cloud Storage URI of a KMS encrypted
+      file containing the password to the user provided truststore. For the
+      self-signed certificate, this password is generated by Dataproc.
+    truststoreUri: Optional. The Cloud Storage URI of the truststore file used
+      for SSL encryption. If not provided, Dataproc will provide a self-signed
+      certificate.
+  """
+
+  crossRealmTrustAdminServer = _messages.StringField(1)
+  crossRealmTrustKdc = _messages.StringField(2)
+  crossRealmTrustRealm = _messages.StringField(3)
+  crossRealmTrustSharedPasswordUri = _messages.StringField(4)
+  enableKerberos = _messages.BooleanField(5)
+  kdcDbKeyUri = _messages.StringField(6)
+  keyPasswordUri = _messages.StringField(7)
+  keystorePasswordUri = _messages.StringField(8)
+  keystoreUri = _messages.StringField(9)
+  kmsKeyUri = _messages.StringField(10)
+  rootPrincipalPasswordUri = _messages.StringField(11)
+  tgtLifetimeHours = _messages.IntegerField(12, variant=_messages.Variant.INT32)
+  truststorePasswordUri = _messages.StringField(13)
+  truststoreUri = _messages.StringField(14)
 
 
 class ListClustersResponse(_messages.Message):
@@ -2568,6 +2630,16 @@ class RegexValidation(_messages.Message):
   regexes = _messages.StringField(1, repeated=True)
 
 
+class SecurityConfig(_messages.Message):
+  r"""Security related configuration, including Kerberos.
+
+  Fields:
+    kerberosConfig: Kerberos related configuration.
+  """
+
+  kerberosConfig = _messages.MessageField('KerberosConfig', 1)
+
+
 class SetIamPolicyRequest(_messages.Message):
   r"""Request message for SetIamPolicy method.
 
@@ -2589,8 +2661,8 @@ class SoftwareConfig(_messages.Message):
 
   Messages:
     PropertiesValue: Optional. The properties to set on daemon config
-      files.Property keys are specified in prefix:property format, such as
-      core:fs.defaultFS. The following are supported prefixes and their
+      files.Property keys are specified in prefix:property format, for example
+      core:hadoop.tmp.dir. The following are supported prefixes and their
       mappings: capacity-scheduler: capacity-scheduler.xml core: core-site.xml
       distcp: distcp-default.xml hdfs: hdfs-site.xml hive: hive-site.xml
       mapred: mapred-site.xml pig: pig.properties spark: spark-defaults.conf
@@ -2600,12 +2672,12 @@ class SoftwareConfig(_messages.Message):
     imageVersion: Optional. The version of software inside the cluster. It
       must be one of the supported Cloud Dataproc Versions, such as "1.2"
       (including a subminor version, such as "1.2.29"), or the "preview"
-      version. If unspecified, it defaults to the latest version.
+      version. If unspecified, it defaults to the latest Debian version.
     optionalComponents: The set of optional components to activate on the
       cluster.
     properties: Optional. The properties to set on daemon config
-      files.Property keys are specified in prefix:property format, such as
-      core:fs.defaultFS. The following are supported prefixes and their
+      files.Property keys are specified in prefix:property format, for example
+      core:hadoop.tmp.dir. The following are supported prefixes and their
       mappings: capacity-scheduler: capacity-scheduler.xml core: core-site.xml
       distcp: distcp-default.xml hdfs: hdfs-site.xml hive: hive-site.xml
       mapred: mapred-site.xml pig: pig.properties spark: spark-defaults.conf
@@ -2618,6 +2690,7 @@ class SoftwareConfig(_messages.Message):
     Values:
       COMPONENT_UNSPECIFIED: <no description>
       ANACONDA: <no description>
+      DRUID: <no description>
       HIVE_WEBHCAT: <no description>
       JUPYTER: <no description>
       KERBEROS: <no description>
@@ -2627,22 +2700,23 @@ class SoftwareConfig(_messages.Message):
     """
     COMPONENT_UNSPECIFIED = 0
     ANACONDA = 1
-    HIVE_WEBHCAT = 2
-    JUPYTER = 3
-    KERBEROS = 4
-    PRESTO = 5
-    ZEPPELIN = 6
-    ZOOKEEPER = 7
+    DRUID = 2
+    HIVE_WEBHCAT = 3
+    JUPYTER = 4
+    KERBEROS = 5
+    PRESTO = 6
+    ZEPPELIN = 7
+    ZOOKEEPER = 8
 
   @encoding.MapUnrecognizedFields('additionalProperties')
   class PropertiesValue(_messages.Message):
     r"""Optional. The properties to set on daemon config files.Property keys
-    are specified in prefix:property format, such as core:fs.defaultFS. The
-    following are supported prefixes and their mappings: capacity-scheduler:
-    capacity-scheduler.xml core: core-site.xml distcp: distcp-default.xml
-    hdfs: hdfs-site.xml hive: hive-site.xml mapred: mapred-site.xml pig:
-    pig.properties spark: spark-defaults.conf yarn: yarn-site.xmlFor more
-    information, see Cluster properties.
+    are specified in prefix:property format, for example core:hadoop.tmp.dir.
+    The following are supported prefixes and their mappings: capacity-
+    scheduler: capacity-scheduler.xml core: core-site.xml distcp: distcp-
+    default.xml hdfs: hdfs-site.xml hive: hive-site.xml mapred: mapred-
+    site.xml pig: pig.properties spark: spark-defaults.conf yarn: yarn-
+    site.xmlFor more information, see Cluster properties.
 
     Messages:
       AdditionalProperty: An additional property for a PropertiesValue object.

@@ -23,6 +23,7 @@ from googlecloudsdk.api_lib.compute import utils
 from googlecloudsdk.api_lib.functions import env_vars as env_vars_api_util
 from googlecloudsdk.api_lib.functions import util as api_util
 from googlecloudsdk.calliope import base
+from googlecloudsdk.calliope import exceptions
 from googlecloudsdk.command_lib.functions import flags
 from googlecloudsdk.command_lib.functions.deploy import env_vars_util
 from googlecloudsdk.command_lib.functions.deploy import labels_util
@@ -45,8 +46,12 @@ def _ApplyEnvVarsArgsToFunction(function, args):
   return updated_fields
 
 
-def _Run(args, track=None, enable_runtime=True, enable_max_instances=False,
-         enable_connected_vpc=False):
+def _Run(args,
+         track=None,
+         enable_runtime=True,
+         enable_max_instances=False,
+         enable_connected_vpc=False,
+         enable_vpc_connector=False):
   """Run a function deployment with the given args."""
   # Check for labels that start with `deployment`, which is not allowed.
   labels_util.CheckNoDeploymentLabels('--remove-labels', args.remove_labels)
@@ -99,9 +104,16 @@ def _Run(args, track=None, enable_runtime=True, enable_max_instances=False,
     if args.IsSpecified('runtime'):
       function.runtime = args.runtime
       updated_fields.append('runtime')
+      if args.runtime in ['nodejs', 'nodejs6']:  # nodejs is nodejs6 alias
+        log.warning(
+            'The Node.js 6 runtime is deprecated on Cloud Functions. '
+            'Please migrate to Node.js 8 (--runtime=nodejs8) or Node.js 10 '
+            '(--runtime=nodejs10). '
+            'See https://cloud.google.com/functions/docs/migrating/nodejs-runtimes'
+        )
     elif is_new_function:
-      log.warning('Flag `--runtime` will become a required flag soon. '
-                  'Please specify the value for this flag.')
+      raise exceptions.RequiredArgumentException(
+          'runtime', 'Flag `--runtime` is required for new functions.')
   if enable_max_instances:
     if (args.IsSpecified('max_instances') or
         args.IsSpecified('clear_max_instances')):
@@ -112,7 +124,11 @@ def _Run(args, track=None, enable_runtime=True, enable_max_instances=False,
     if args.connected_vpc:
       function.network = args.connected_vpc
       updated_fields.append('network')
-    if args.vpc_connector:
+    if args.IsSpecified('vpc_connector'):
+      function.vpcConnector = args.vpc_connector
+      updated_fields.append('vpcConnector')
+  if enable_vpc_connector:
+    if args.IsSpecified('vpc_connector'):
       function.vpcConnector = args.vpc_connector
       updated_fields.append('vpcConnector')
 
@@ -204,9 +220,15 @@ class DeployBeta(base.Command):
   def Args(parser):
     """Register flags for this command."""
     Deploy.Args(parser)
+    flags.AddMaxInstancesFlag(parser)
+    flags.AddVPCMutexGroup(parser, enable_connected_vpc=False)
 
   def Run(self, args):
-    return _Run(args, track=self.ReleaseTrack())
+    return _Run(
+        args,
+        track=self.ReleaseTrack(),
+        enable_max_instances=True,
+        enable_vpc_connector=True)
 
 
 @base.ReleaseTracks(base.ReleaseTrack.ALPHA)
@@ -218,7 +240,7 @@ class DeployAlpha(base.Command):
     """Register flags for this command."""
     Deploy.Args(parser)
     flags.AddMaxInstancesFlag(parser)
-    flags.AddConnectedVPCMutexGroup(parser)
+    flags.AddVPCMutexGroup(parser, enable_connected_vpc=True)
 
   def Run(self, args):
     return _Run(args, track=self.ReleaseTrack(), enable_max_instances=True,

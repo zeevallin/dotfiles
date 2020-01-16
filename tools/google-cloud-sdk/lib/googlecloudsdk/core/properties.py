@@ -1313,8 +1313,12 @@ class _SectionFilestore(_Section):
     super(_SectionFilestore, self).__init__('filestore')
     self.location = self._Add(
         'location',
-        help_text='Default location to use when working with Cloud Filestore '
-        'locations. When a `--location` flag is required but not '
+        help_text='(DEPRECATED) Please use the `--location` flag or set the '
+        'filestore/zone property.')
+    self.zone = self._Add(
+        'zone',
+        help_text='Default zone to use when working with Cloud Filestore '
+        'zones. When a `--zone` flag is required but not '
         'provided, the command will fall back to this value, if set.')
 
 
@@ -1576,6 +1580,7 @@ class _SectionApiEndpointOverrides(_Section):
     self.compute = self._Add('compute')
     self.container = self._Add('container')
     self.containeranalysis = self._Add('containeranalysis')
+    self.datacatalog = self._Add('datacatalog')
     self.dataflow = self._Add('dataflow')
     self.datapol = self._Add('datapol')
     self.dataproc = self._Add('dataproc')
@@ -1583,10 +1588,12 @@ class _SectionApiEndpointOverrides(_Section):
     self.deploymentmanager = self._Add('deploymentmanager')
     self.discovery = self._Add('discovery')
     self.dns = self._Add('dns')
+    self.domains = self._Add('domains')
     self.file = self._Add('file')
     self.firestore = self._Add('firestore')
     self.genomics = self._Add('genomics')
     self.gkehub = self._Add('gkehub')
+    self.healthcare = self._Add('healthcare')
     self.iam = self._Add('iam')
     self.kubernetespolicy = self._Add('kubernetespolicy')
     self.language = self._Add('language')
@@ -1596,6 +1603,7 @@ class _SectionApiEndpointOverrides(_Section):
     self.monitoring = self._Add('monitoring')
     self.oslogin = self._Add('oslogin')
     self.pubsub = self._Add('pubsub')
+    self.recommender = self._Add('recommender')
     self.replicapoolupdater = self._Add('replicapoolupdater')
     self.runtimeconfig = self._Add('runtimeconfig')
     self.redis = self._Add('redis')

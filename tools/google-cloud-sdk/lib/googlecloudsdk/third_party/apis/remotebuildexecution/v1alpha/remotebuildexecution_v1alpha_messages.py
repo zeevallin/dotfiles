@@ -702,13 +702,15 @@ class GoogleDevtoolsRemotebuildbotCommandEvents(_messages.Message):
   Fields:
     dockerCacheHit: Indicates whether we are using a cached Docker image
       (true) or had to pull the Docker image (false) for this command.
+    inputCacheMiss: The input cache miss ratio.
     numErrors: The number of errors reported.
     numWarnings: The number of warnings reported.
   """
 
   dockerCacheHit = _messages.BooleanField(1)
-  numErrors = _messages.IntegerField(2, variant=_messages.Variant.UINT64)
-  numWarnings = _messages.IntegerField(3, variant=_messages.Variant.UINT64)
+  inputCacheMiss = _messages.FloatField(2, variant=_messages.Variant.FLOAT)
+  numErrors = _messages.IntegerField(3, variant=_messages.Variant.UINT64)
+  numWarnings = _messages.IntegerField(4, variant=_messages.Variant.UINT64)
 
 
 class GoogleDevtoolsRemotebuildexecutionAdminV1alphaCreateInstanceRequest(_messages.Message):
@@ -918,9 +920,10 @@ class GoogleDevtoolsRemotebuildexecutionAdminV1alphaWorkerConfig(_messages.Messa
       `g1-small` are not yet supported.
     minCpuPlatform: Minimum CPU platform to use when creating the worker. See
       [CPU Platforms](https://cloud.google.com/compute/docs/cpu-platforms).
-    reserved: Determines whether the worker is reserved (and therefore won't
-      be preempted). See [Preemptible VMs](https://cloud.google.com
-      /preemptible-vms/) for more details.
+    reserved: Determines whether the worker is reserved (equivalent to a
+      Compute Engine on-demand VM and therefore won't be preempted). See
+      [Preemptible VMs](https://cloud.google.com/preemptible-vms/) for more
+      details.
   """
 
   diskSizeGb = _messages.IntegerField(1)
@@ -1599,12 +1602,17 @@ class GoogleDevtoolsRemoteworkersV1test2CommandTaskInputs(_messages.Message):
       that are indirectly referenced by an entry there.  The bot should check
       against this list before downloading required task inputs to reduce the
       number of communications between itself and the remote CAS server.
+    workingDirectory: Directory from which a command is executed. It is a
+      relative directory with respect to the bot's working directory (i.e.,
+      "./"). If it is non-empty, then it must exist under "./". Otherwise,
+      "./" will be used.
   """
 
   arguments = _messages.StringField(1, repeated=True)
   environmentVariables = _messages.MessageField('GoogleDevtoolsRemoteworkersV1test2CommandTaskInputsEnvironmentVariable', 2, repeated=True)
   files = _messages.MessageField('GoogleDevtoolsRemoteworkersV1test2Digest', 3, repeated=True)
   inlineBlobs = _messages.MessageField('GoogleDevtoolsRemoteworkersV1test2Blob', 4, repeated=True)
+  workingDirectory = _messages.StringField(5)
 
 
 class GoogleDevtoolsRemoteworkersV1test2CommandTaskInputsEnvironmentVariable(_messages.Message):

@@ -25,6 +25,29 @@ class AddProductToProductSetRequest(_messages.Message):
   product = _messages.StringField(1)
 
 
+class AnnotateFileRequest(_messages.Message):
+  r"""A request to annotate one single file, e.g. a PDF, TIFF or GIF file.
+
+  Fields:
+    features: Required. Requested features.
+    imageContext: Additional context that may accompany the image(s) in the
+      file.
+    inputConfig: Required. Information about the input file.
+    pages: Pages of the file to perform image annotation.  Pages starts from
+      1, we assume the first page of the file is page 1. At most 5 pages are
+      supported per request. Pages can be negative.  Page 1 means the first
+      page. Page 2 means the second page. Page -1 means the last page. Page -2
+      means the second to the last page.  If the file is GIF instead of PDF or
+      TIFF, page refers to GIF frames.  If this field is empty, by default the
+      service performs image annotation for the first 5 pages of the file.
+  """
+
+  features = _messages.MessageField('Feature', 1, repeated=True)
+  imageContext = _messages.MessageField('ImageContext', 2)
+  inputConfig = _messages.MessageField('InputConfig', 3)
+  pages = _messages.IntegerField(4, repeated=True, variant=_messages.Variant.INT32)
+
+
 class AnnotateFileResponse(_messages.Message):
   r"""Response to a single file annotation request. A file may contain one or
   more images, which individually have their own responses.
@@ -33,10 +56,12 @@ class AnnotateFileResponse(_messages.Message):
     inputConfig: Information about the file for which this response is
       generated.
     responses: Individual responses to images found within the file.
+    totalPages: This field gives the total number of pages in the file.
   """
 
   inputConfig = _messages.MessageField('InputConfig', 1)
   responses = _messages.MessageField('AnnotateImageResponse', 2, repeated=True)
+  totalPages = _messages.IntegerField(3, variant=_messages.Variant.INT32)
 
 
 class AnnotateImageRequest(_messages.Message):
@@ -151,6 +176,52 @@ class AsyncBatchAnnotateFilesResponse(_messages.Message):
   """
 
   responses = _messages.MessageField('AsyncAnnotateFileResponse', 1, repeated=True)
+
+
+class AsyncBatchAnnotateImagesRequest(_messages.Message):
+  r"""Request for async image annotation for a list of images.
+
+  Fields:
+    outputConfig: Required. The desired output location and metadata (e.g.
+      format).
+    requests: Individual image annotation requests for this batch.
+  """
+
+  outputConfig = _messages.MessageField('OutputConfig', 1)
+  requests = _messages.MessageField('AnnotateImageRequest', 2, repeated=True)
+
+
+class AsyncBatchAnnotateImagesResponse(_messages.Message):
+  r"""Response to an async batch image annotation request.
+
+  Fields:
+    outputConfig: The output location and metadata from
+      AsyncBatchAnnotateImagesRequest.
+  """
+
+  outputConfig = _messages.MessageField('OutputConfig', 1)
+
+
+class BatchAnnotateFilesRequest(_messages.Message):
+  r"""A list of requests to annotate files using the BatchAnnotateFiles API.
+
+  Fields:
+    requests: The list of file annotation requests. Right now we support only
+      one AnnotateFileRequest in BatchAnnotateFilesRequest.
+  """
+
+  requests = _messages.MessageField('AnnotateFileRequest', 1, repeated=True)
+
+
+class BatchAnnotateFilesResponse(_messages.Message):
+  r"""A list of file annotation responses.
+
+  Fields:
+    responses: The list of file annotation responses, each response
+      corresponding to each AnnotateFileRequest in BatchAnnotateFilesRequest.
+  """
+
+  responses = _messages.MessageField('AnnotateFileResponse', 1, repeated=True)
 
 
 class BatchAnnotateImagesRequest(_messages.Message):
@@ -288,10 +359,13 @@ class Color(_messages.Message):
   "java.awt.Color" in Java; it can also be trivially provided to UIColor's
   "+colorWithRed:green:blue:alpha" method in iOS; and, with just a little
   work, it can be easily formatted into a CSS "rgba()" string in JavaScript,
-  as well. Here are some examples:  Example (Java):       import
-  com.google.type.Color;       // ...      public static java.awt.Color
-  fromProto(Color protocolor) {        float alpha = protocolor.hasAlpha()
-  ? protocolor.getAlpha().getValue()            : 1.0;         return new
+  as well.  Note: this proto does not carry information about the absolute
+  color space that should be used to interpret the RGB value (e.g. sRGB, Adobe
+  RGB, DCI-P3, BT.2020, etc.). By default, applications SHOULD assume the sRGB
+  color space.  Example (Java):       import com.google.type.Color;       //
+  ...      public static java.awt.Color fromProto(Color protocolor) {
+  float alpha = protocolor.hasAlpha()            ?
+  protocolor.getAlpha().getValue()            : 1.0;         return new
   java.awt.Color(            protocolor.getRed(),
   protocolor.getGreen(),            protocolor.getBlue(),            alpha);
   }       public static Color toProto(java.awt.Color color) {        float red
@@ -803,16 +877,22 @@ class GcsDestination(_messages.Message):
   r"""The Google Cloud Storage location where the output will be written to.
 
   Fields:
-    uri: Google Cloud Storage URI where the results will be stored. Results
-      will be in JSON format and preceded by its corresponding input URI. This
-      field can either represent a single file, or a prefix for multiple
-      outputs. Prefixes must end in a `/`.  Examples:  *    File: gs://bucket-
-      name/filename.json *    Prefix: gs://bucket-name/prefix/here/ *    File:
-      gs://bucket-name/prefix/here  If multiple outputs, each response is
-      still AnnotateFileResponse, each of which contains some subset of the
-      full list of AnnotateImageResponse. Multiple outputs can happen if, for
-      example, the output JSON is too large and overflows into multiple
-      sharded files.
+    uri: Google Cloud Storage URI prefix where the results will be stored.
+      Results will be in JSON format and preceded by its corresponding input
+      URI prefix. This field can either represent a gcs file prefix or gcs
+      directory. In either case, the uri should be unique because in order to
+      get all of the output files, you will need to do a wildcard gcs search
+      on the uri prefix you provide.  Examples:  *    File Prefix: gs
+      ://bucket-name/here/filenameprefix   The output files will be created in
+      gs://bucket-name/here/ and the names of the output files will begin with
+      "filenameprefix".  *    Directory Prefix: gs://bucket-
+      name/some/location/   The output files will be created in gs://bucket-
+      name/some/location/ and the names of the output files could be anything
+      because there was no filename prefix specified.  If multiple outputs,
+      each response is still AnnotateFileResponse, each of which contains some
+      subset of the full list of AnnotateImageResponse. Multiple outputs can
+      happen if, for example, the output JSON is too large and overflows into
+      multiple sharded files.
   """
 
   uri = _messages.StringField(1)
@@ -837,10 +917,12 @@ class GoogleCloudVisionV1p1beta1AnnotateFileResponse(_messages.Message):
     inputConfig: Information about the file for which this response is
       generated.
     responses: Individual responses to images found within the file.
+    totalPages: This field gives the total number of pages in the file.
   """
 
   inputConfig = _messages.MessageField('GoogleCloudVisionV1p1beta1InputConfig', 1)
   responses = _messages.MessageField('GoogleCloudVisionV1p1beta1AnnotateImageResponse', 2, repeated=True)
+  totalPages = _messages.IntegerField(3, variant=_messages.Variant.INT32)
 
 
 class GoogleCloudVisionV1p1beta1AnnotateImageResponse(_messages.Message):
@@ -1383,16 +1465,22 @@ class GoogleCloudVisionV1p1beta1GcsDestination(_messages.Message):
   r"""The Google Cloud Storage location where the output will be written to.
 
   Fields:
-    uri: Google Cloud Storage URI where the results will be stored. Results
-      will be in JSON format and preceded by its corresponding input URI. This
-      field can either represent a single file, or a prefix for multiple
-      outputs. Prefixes must end in a `/`.  Examples:  *    File: gs://bucket-
-      name/filename.json *    Prefix: gs://bucket-name/prefix/here/ *    File:
-      gs://bucket-name/prefix/here  If multiple outputs, each response is
-      still AnnotateFileResponse, each of which contains some subset of the
-      full list of AnnotateImageResponse. Multiple outputs can happen if, for
-      example, the output JSON is too large and overflows into multiple
-      sharded files.
+    uri: Google Cloud Storage URI prefix where the results will be stored.
+      Results will be in JSON format and preceded by its corresponding input
+      URI prefix. This field can either represent a gcs file prefix or gcs
+      directory. In either case, the uri should be unique because in order to
+      get all of the output files, you will need to do a wildcard gcs search
+      on the uri prefix you provide.  Examples:  *    File Prefix: gs
+      ://bucket-name/here/filenameprefix   The output files will be created in
+      gs://bucket-name/here/ and the names of the output files will begin with
+      "filenameprefix".  *    Directory Prefix: gs://bucket-
+      name/some/location/   The output files will be created in gs://bucket-
+      name/some/location/ and the names of the output files could be anything
+      because there was no filename prefix specified.  If multiple outputs,
+      each response is still AnnotateFileResponse, each of which contains some
+      subset of the full list of AnnotateImageResponse. Multiple outputs can
+      happen if, for example, the output JSON is too large and overflows into
+      multiple sharded files.
   """
 
   uri = _messages.StringField(1)
@@ -1437,13 +1525,19 @@ class GoogleCloudVisionV1p1beta1InputConfig(_messages.Message):
   r"""The desired input location and metadata.
 
   Fields:
+    content: File content, represented as a stream of bytes. Note: As with all
+      `bytes` fields, protobuffers use a pure binary representation, whereas
+      JSON representations use base64.  Currently, this field only works for
+      BatchAnnotateFiles requests. It does not work for
+      AsyncBatchAnnotateFiles requests.
     gcsSource: The Google Cloud Storage location to read the input from.
     mimeType: The type of the file. Currently only "application/pdf" and
       "image/tiff" are supported. Wildcards are not supported.
   """
 
-  gcsSource = _messages.MessageField('GoogleCloudVisionV1p1beta1GcsSource', 1)
-  mimeType = _messages.StringField(2)
+  content = _messages.BytesField(1)
+  gcsSource = _messages.MessageField('GoogleCloudVisionV1p1beta1GcsSource', 2)
+  mimeType = _messages.StringField(3)
 
 
 class GoogleCloudVisionV1p1beta1LocalizedObjectAnnotation(_messages.Message):
@@ -1649,8 +1743,9 @@ class GoogleCloudVisionV1p1beta1ProductSearchResults(_messages.Message):
   r"""Results for a product search request.
 
   Fields:
-    indexTime: Timestamp of the index which provided these results. Changes
-      made after this time are not reflected in the current results.
+    indexTime: Timestamp of the index which provided these results. Products
+      added to the product set and products removed from the product set after
+      this time are not reflected in the current results.
     productGroupedResults: List of results grouped by products detected in the
       query image. Each entry corresponds to one bounding polygon in the query
       image, and contains the matching products specific to that region. There
@@ -2098,10 +2193,12 @@ class GoogleCloudVisionV1p2beta1AnnotateFileResponse(_messages.Message):
     inputConfig: Information about the file for which this response is
       generated.
     responses: Individual responses to images found within the file.
+    totalPages: This field gives the total number of pages in the file.
   """
 
   inputConfig = _messages.MessageField('GoogleCloudVisionV1p2beta1InputConfig', 1)
   responses = _messages.MessageField('GoogleCloudVisionV1p2beta1AnnotateImageResponse', 2, repeated=True)
+  totalPages = _messages.IntegerField(3, variant=_messages.Variant.INT32)
 
 
 class GoogleCloudVisionV1p2beta1AnnotateImageResponse(_messages.Message):
@@ -2644,16 +2741,22 @@ class GoogleCloudVisionV1p2beta1GcsDestination(_messages.Message):
   r"""The Google Cloud Storage location where the output will be written to.
 
   Fields:
-    uri: Google Cloud Storage URI where the results will be stored. Results
-      will be in JSON format and preceded by its corresponding input URI. This
-      field can either represent a single file, or a prefix for multiple
-      outputs. Prefixes must end in a `/`.  Examples:  *    File: gs://bucket-
-      name/filename.json *    Prefix: gs://bucket-name/prefix/here/ *    File:
-      gs://bucket-name/prefix/here  If multiple outputs, each response is
-      still AnnotateFileResponse, each of which contains some subset of the
-      full list of AnnotateImageResponse. Multiple outputs can happen if, for
-      example, the output JSON is too large and overflows into multiple
-      sharded files.
+    uri: Google Cloud Storage URI prefix where the results will be stored.
+      Results will be in JSON format and preceded by its corresponding input
+      URI prefix. This field can either represent a gcs file prefix or gcs
+      directory. In either case, the uri should be unique because in order to
+      get all of the output files, you will need to do a wildcard gcs search
+      on the uri prefix you provide.  Examples:  *    File Prefix: gs
+      ://bucket-name/here/filenameprefix   The output files will be created in
+      gs://bucket-name/here/ and the names of the output files will begin with
+      "filenameprefix".  *    Directory Prefix: gs://bucket-
+      name/some/location/   The output files will be created in gs://bucket-
+      name/some/location/ and the names of the output files could be anything
+      because there was no filename prefix specified.  If multiple outputs,
+      each response is still AnnotateFileResponse, each of which contains some
+      subset of the full list of AnnotateImageResponse. Multiple outputs can
+      happen if, for example, the output JSON is too large and overflows into
+      multiple sharded files.
   """
 
   uri = _messages.StringField(1)
@@ -2698,13 +2801,19 @@ class GoogleCloudVisionV1p2beta1InputConfig(_messages.Message):
   r"""The desired input location and metadata.
 
   Fields:
+    content: File content, represented as a stream of bytes. Note: As with all
+      `bytes` fields, protobuffers use a pure binary representation, whereas
+      JSON representations use base64.  Currently, this field only works for
+      BatchAnnotateFiles requests. It does not work for
+      AsyncBatchAnnotateFiles requests.
     gcsSource: The Google Cloud Storage location to read the input from.
     mimeType: The type of the file. Currently only "application/pdf" and
       "image/tiff" are supported. Wildcards are not supported.
   """
 
-  gcsSource = _messages.MessageField('GoogleCloudVisionV1p2beta1GcsSource', 1)
-  mimeType = _messages.StringField(2)
+  content = _messages.BytesField(1)
+  gcsSource = _messages.MessageField('GoogleCloudVisionV1p2beta1GcsSource', 2)
+  mimeType = _messages.StringField(3)
 
 
 class GoogleCloudVisionV1p2beta1LocalizedObjectAnnotation(_messages.Message):
@@ -2910,8 +3019,9 @@ class GoogleCloudVisionV1p2beta1ProductSearchResults(_messages.Message):
   r"""Results for a product search request.
 
   Fields:
-    indexTime: Timestamp of the index which provided these results. Changes
-      made after this time are not reflected in the current results.
+    indexTime: Timestamp of the index which provided these results. Products
+      added to the product set and products removed from the product set after
+      this time are not reflected in the current results.
     productGroupedResults: List of results grouped by products detected in the
       query image. Each entry corresponds to one bounding polygon in the query
       image, and contains the matching products specific to that region. There
@@ -3359,10 +3469,12 @@ class GoogleCloudVisionV1p3beta1AnnotateFileResponse(_messages.Message):
     inputConfig: Information about the file for which this response is
       generated.
     responses: Individual responses to images found within the file.
+    totalPages: This field gives the total number of pages in the file.
   """
 
   inputConfig = _messages.MessageField('GoogleCloudVisionV1p3beta1InputConfig', 1)
   responses = _messages.MessageField('GoogleCloudVisionV1p3beta1AnnotateImageResponse', 2, repeated=True)
+  totalPages = _messages.IntegerField(3, variant=_messages.Variant.INT32)
 
 
 class GoogleCloudVisionV1p3beta1AnnotateImageResponse(_messages.Message):
@@ -3945,16 +4057,22 @@ class GoogleCloudVisionV1p3beta1GcsDestination(_messages.Message):
   r"""The Google Cloud Storage location where the output will be written to.
 
   Fields:
-    uri: Google Cloud Storage URI where the results will be stored. Results
-      will be in JSON format and preceded by its corresponding input URI. This
-      field can either represent a single file, or a prefix for multiple
-      outputs. Prefixes must end in a `/`.  Examples:  *    File: gs://bucket-
-      name/filename.json *    Prefix: gs://bucket-name/prefix/here/ *    File:
-      gs://bucket-name/prefix/here  If multiple outputs, each response is
-      still AnnotateFileResponse, each of which contains some subset of the
-      full list of AnnotateImageResponse. Multiple outputs can happen if, for
-      example, the output JSON is too large and overflows into multiple
-      sharded files.
+    uri: Google Cloud Storage URI prefix where the results will be stored.
+      Results will be in JSON format and preceded by its corresponding input
+      URI prefix. This field can either represent a gcs file prefix or gcs
+      directory. In either case, the uri should be unique because in order to
+      get all of the output files, you will need to do a wildcard gcs search
+      on the uri prefix you provide.  Examples:  *    File Prefix: gs
+      ://bucket-name/here/filenameprefix   The output files will be created in
+      gs://bucket-name/here/ and the names of the output files will begin with
+      "filenameprefix".  *    Directory Prefix: gs://bucket-
+      name/some/location/   The output files will be created in gs://bucket-
+      name/some/location/ and the names of the output files could be anything
+      because there was no filename prefix specified.  If multiple outputs,
+      each response is still AnnotateFileResponse, each of which contains some
+      subset of the full list of AnnotateImageResponse. Multiple outputs can
+      happen if, for example, the output JSON is too large and overflows into
+      multiple sharded files.
   """
 
   uri = _messages.StringField(1)
@@ -4017,13 +4135,19 @@ class GoogleCloudVisionV1p3beta1InputConfig(_messages.Message):
   r"""The desired input location and metadata.
 
   Fields:
+    content: File content, represented as a stream of bytes. Note: As with all
+      `bytes` fields, protobuffers use a pure binary representation, whereas
+      JSON representations use base64.  Currently, this field only works for
+      BatchAnnotateFiles requests. It does not work for
+      AsyncBatchAnnotateFiles requests.
     gcsSource: The Google Cloud Storage location to read the input from.
     mimeType: The type of the file. Currently only "application/pdf" and
       "image/tiff" are supported. Wildcards are not supported.
   """
 
-  gcsSource = _messages.MessageField('GoogleCloudVisionV1p3beta1GcsSource', 1)
-  mimeType = _messages.StringField(2)
+  content = _messages.BytesField(1)
+  gcsSource = _messages.MessageField('GoogleCloudVisionV1p3beta1GcsSource', 2)
+  mimeType = _messages.StringField(3)
 
 
 class GoogleCloudVisionV1p3beta1LocalizedObjectAnnotation(_messages.Message):
@@ -4229,8 +4353,9 @@ class GoogleCloudVisionV1p3beta1ProductSearchResults(_messages.Message):
   r"""Results for a product search request.
 
   Fields:
-    indexTime: Timestamp of the index which provided these results. Changes
-      made after this time are not reflected in the current results.
+    indexTime: Timestamp of the index which provided these results. Products
+      added to the product set and products removed from the product set after
+      this time are not reflected in the current results.
     productGroupedResults: List of results grouped by products detected in the
       query image. Each entry corresponds to one bounding polygon in the query
       image, and contains the matching products specific to that region. There
@@ -5312,16 +5437,22 @@ class GoogleCloudVisionV1p4beta1GcsDestination(_messages.Message):
   r"""The Google Cloud Storage location where the output will be written to.
 
   Fields:
-    uri: Google Cloud Storage URI where the results will be stored. Results
-      will be in JSON format and preceded by its corresponding input URI. This
-      field can either represent a single file, or a prefix for multiple
-      outputs. Prefixes must end in a `/`.  Examples:  *    File: gs://bucket-
-      name/filename.json *    Prefix: gs://bucket-name/prefix/here/ *    File:
-      gs://bucket-name/prefix/here  If multiple outputs, each response is
-      still AnnotateFileResponse, each of which contains some subset of the
-      full list of AnnotateImageResponse. Multiple outputs can happen if, for
-      example, the output JSON is too large and overflows into multiple
-      sharded files.
+    uri: Google Cloud Storage URI prefix where the results will be stored.
+      Results will be in JSON format and preceded by its corresponding input
+      URI prefix. This field can either represent a gcs file prefix or gcs
+      directory. In either case, the uri should be unique because in order to
+      get all of the output files, you will need to do a wildcard gcs search
+      on the uri prefix you provide.  Examples:  *    File Prefix: gs
+      ://bucket-name/here/filenameprefix   The output files will be created in
+      gs://bucket-name/here/ and the names of the output files will begin with
+      "filenameprefix".  *    Directory Prefix: gs://bucket-
+      name/some/location/   The output files will be created in gs://bucket-
+      name/some/location/ and the names of the output files could be anything
+      because there was no filename prefix specified.  If multiple outputs,
+      each response is still AnnotateFileResponse, each of which contains some
+      subset of the full list of AnnotateImageResponse. Multiple outputs can
+      happen if, for example, the output JSON is too large and overflows into
+      multiple sharded files.
   """
 
   uri = _messages.StringField(1)
@@ -5602,8 +5733,9 @@ class GoogleCloudVisionV1p4beta1ProductSearchResults(_messages.Message):
   r"""Results for a product search request.
 
   Fields:
-    indexTime: Timestamp of the index which provided these results. Changes
-      made after this time are not reflected in the current results.
+    indexTime: Timestamp of the index which provided these results. Products
+      added to the product set and products removed from the product set after
+      this time are not reflected in the current results.
     productGroupedResults: List of results grouped by products detected in the
       query image. Each entry corresponds to one bounding polygon in the query
       image, and contains the matching products specific to that region. There
@@ -6260,13 +6392,19 @@ class InputConfig(_messages.Message):
   r"""The desired input location and metadata.
 
   Fields:
+    content: File content, represented as a stream of bytes. Note: As with all
+      `bytes` fields, protobuffers use a pure binary representation, whereas
+      JSON representations use base64.  Currently, this field only works for
+      BatchAnnotateFiles requests. It does not work for
+      AsyncBatchAnnotateFiles requests.
     gcsSource: The Google Cloud Storage location to read the input from.
     mimeType: The type of the file. Currently only "application/pdf" and
       "image/tiff" are supported. Wildcards are not supported.
   """
 
-  gcsSource = _messages.MessageField('GcsSource', 1)
-  mimeType = _messages.StringField(2)
+  content = _messages.BytesField(1)
+  gcsSource = _messages.MessageField('GcsSource', 2)
+  mimeType = _messages.StringField(3)
 
 
 class KeyValue(_messages.Message):
@@ -6772,9 +6910,10 @@ class ProductSearchParams(_messages.Message):
     filter: The filtering expression. This can be used to restrict search
       results based on Product labels. We currently support an AND of OR of
       key-value expressions, where each expression within an OR must have the
-      same key.  For example, "(color = red OR color = blue) AND brand =
-      Google" is acceptable, but not "(color = red OR brand = Google)" or
-      "color: red".
+      same key. An '=' should be used to connect the key and value.  For
+      example, "(color = red OR color = blue) AND brand = Google" is
+      acceptable, but "(color = red OR brand = Google)" is not acceptable.
+      "color: red" is not acceptable because it uses a ':' instead of an '='.
     productCategories: The list of product categories to search in. Currently,
       we only consider the first category, and either "homegoods", "apparel",
       or "toys" should be specified.
@@ -6793,8 +6932,9 @@ class ProductSearchResults(_messages.Message):
   r"""Results for a product search request.
 
   Fields:
-    indexTime: Timestamp of the index which provided these results. Changes
-      made after this time are not reflected in the current results.
+    indexTime: Timestamp of the index which provided these results. Products
+      added to the product set and products removed from the product set after
+      this time are not reflected in the current results.
     productGroupedResults: List of results grouped by products detected in the
       query image. Each entry corresponds to one bounding polygon in the query
       image, and contains the matching products specific to that region. There
@@ -7324,6 +7464,16 @@ class VisionOperationsListRequest(_messages.Message):
   pageToken = _messages.StringField(4)
 
 
+class VisionProjectsLocationsOperationsGetRequest(_messages.Message):
+  r"""A VisionProjectsLocationsOperationsGetRequest object.
+
+  Fields:
+    name: The name of the operation resource.
+  """
+
+  name = _messages.StringField(1, required=True)
+
+
 class VisionProjectsLocationsProductSetsAddProductRequest(_messages.Message):
   r"""A VisionProjectsLocationsProductSetsAddProductRequest object.
 
@@ -7590,6 +7740,16 @@ class VisionProjectsLocationsProductsReferenceImagesListRequest(_messages.Messag
   pageSize = _messages.IntegerField(1, variant=_messages.Variant.INT32)
   pageToken = _messages.StringField(2)
   parent = _messages.StringField(3, required=True)
+
+
+class VisionProjectsOperationsGetRequest(_messages.Message):
+  r"""A VisionProjectsOperationsGetRequest object.
+
+  Fields:
+    name: The name of the operation resource.
+  """
+
+  name = _messages.StringField(1, required=True)
 
 
 class WebDetection(_messages.Message):

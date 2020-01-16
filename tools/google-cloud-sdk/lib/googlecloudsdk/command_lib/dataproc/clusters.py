@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Utilities for building the dataproc clusters CLI."""
 
 from __future__ import absolute_import
@@ -44,6 +43,7 @@ GENERATED_LABEL_PREFIX = 'goog-dataproc-'
 
 
 # beta is unused but still useful when we add new beta features
+# pylint: disable=unused-argument
 def ArgsForClusterRef(parser, beta=False, include_deprecated=True):
   """Register flags for creating a dataproc cluster.
 
@@ -57,7 +57,7 @@ def ArgsForClusterRef(parser, beta=False, include_deprecated=True):
   # 30m is backend timeout + 5m for safety buffer.
   flags.AddTimeoutFlag(parser, default='35m')
   flags.AddZoneFlag(parser, short_flags=include_deprecated)
-  flags.AddComponentFlag(parser, not beta)  # Hidden in GA track.
+  flags.AddComponentFlag(parser)
 
   parser.add_argument(
       '--metadata',
@@ -116,9 +116,11 @@ def ArgsForClusterRef(parser, beta=False, include_deprecated=True):
       'latest version.')
   parser.add_argument(
       '--bucket',
-      help='The Google Cloud Storage bucket to use with the Google Cloud '
-      'Storage connector. A bucket is auto created when this parameter is '
-      'not specified.')
+      help="""\
+      The Google Cloud Storage bucket to use by default to stage job
+      dependencies, miscellaneous config files, and job driver console output
+      when using this cluster.
+      """)
 
   netparser = parser.add_mutually_exclusive_group()
   netparser.add_argument(
@@ -350,11 +352,14 @@ def BetaArgsForClusterRef(parser):
   """Register beta-only flags for creating a Dataproc cluster."""
   flags.AddMinCpuPlatformArgs(parser, base.ReleaseTrack.BETA)
 
+  autoscaling_group = parser.add_argument_group()
+  flags.AddAutoscalingPolicyResourceArgForCluster(
+      autoscaling_group, api_version='v1beta2')
+
   AddKerberosGroup(parser)
 
   parser.add_argument(
       '--enable-component-gateway',
-      hidden=True,
       action='store_true',
       help="""\
         Enable access to the web UIs of selected components on the cluster
@@ -418,7 +423,7 @@ def BetaArgsForClusterRef(parser):
         metavar='type=TYPE,[count=COUNT]',
         help=help_msg)
 
-  AddAllocationAffinityGroup(parser)
+  AddReservationAffinityGroup(parser)
 
 
 def GetClusterConfig(args,
@@ -512,9 +517,10 @@ def GetClusterConfig(args,
 
   if args.components:
     software_config_cls = dataproc.messages.SoftwareConfig
-    software_config.optionalComponents.extend(list(map(
-        software_config_cls.OptionalComponentsValueListEntryValuesEnum,
-        args.components)))
+    software_config.optionalComponents.extend(
+        list(
+            map(software_config_cls.OptionalComponentsValueListEntryValuesEnum,
+                args.components)))
 
   gce_cluster_config = dataproc.messages.GceClusterConfig(
       networkUri=network_ref and network_ref.SelfLink(),
@@ -525,8 +531,8 @@ def GetClusterConfig(args,
       zoneUri=properties.VALUES.compute.zone.GetOrFail())
 
   if beta:
-    allocation_affinity = GetAllocationAffinity(args, dataproc)
-    gce_cluster_config.allocationAffinity = allocation_affinity
+    reservation_affinity = GetReservationAffinity(args, dataproc)
+    gce_cluster_config.reservationAffinity = reservation_affinity
 
   if args.tags:
     gce_cluster_config.tags = args.tags
@@ -558,12 +564,9 @@ def GetClusterConfig(args,
           imageUri=image_ref and image_ref.SelfLink(),
           machineTypeUri=args.master_machine_type,
           accelerators=master_accelerators,
-          diskConfig=GetDiskConfig(
-              dataproc,
-              args.master_boot_disk_type,
-              master_boot_disk_size_gb,
-              args.num_master_local_ssds
-          )),
+          diskConfig=GetDiskConfig(dataproc, args.master_boot_disk_type,
+                                   master_boot_disk_size_gb,
+                                   args.num_master_local_ssds)),
       workerConfig=dataproc.messages.InstanceGroupConfig(
           numInstances=args.num_workers,
           imageUri=image_ref and image_ref.SelfLink(),
@@ -599,12 +602,13 @@ def GetClusterConfig(args,
     if args.enable_component_gateway:
       cluster_config.endpointConfig = dataproc.messages.EndpointConfig(
           enableHttpPortAccess=args.enable_component_gateway)
+    if args.autoscaling_policy:
+      cluster_config.autoscalingConfig = dataproc.messages.AutoscalingConfig(
+          policyUri=args.CONCEPTS.autoscaling_policy.Parse().RelativeName())
 
-  if beta:
     cluster_config.masterConfig.minCpuPlatform = args.master_min_cpu_platform
     cluster_config.workerConfig.minCpuPlatform = args.worker_min_cpu_platform
 
-  if beta:
     lifecycle_config = dataproc.messages.LifecycleConfig()
     changed_config = False
     if args.max_age is not None:
@@ -659,10 +663,7 @@ def GetClusterConfig(args,
   return cluster_config
 
 
-def GetDiskConfig(dataproc,
-                  boot_disk_type,
-                  boot_disk_size,
-                  num_local_ssds):
+def GetDiskConfig(dataproc, boot_disk_type, boot_disk_size, num_local_ssds):
   """Get dataproc cluster disk configuration.
 
   Args:
@@ -761,67 +762,67 @@ def DeleteGeneratedLabels(cluster, dataproc):
           labels, dataproc.messages.Cluster.LabelsValue)
 
 
-def AddAllocationAffinityGroup(parser):
-  """Adds the argument group to handle allocation affinity configurations."""
+def AddReservationAffinityGroup(parser):
+  """Adds the argument group to handle reservation affinity configurations."""
   group = parser.add_group(help='Manage the configuration of desired'
-                                'allocation which this instance could'
+                                'reservation which this instance could'
                                 'take capacity from.'
                           )
   group.add_argument(
-      '--allocation-affinity',
+      '--reservation-affinity',
       choices=['any', 'none', 'specific'],
       default='any',
       hidden=True,
       help="""
-Specifies the configuration of desired allocation which this instance could
+Specifies the configuration of desired reservation which this instance could
 take capacity from. Choices are 'any', 'none' and 'specific', default is 'any'.
 """)
   group.add_argument(
-      '--allocation-label',
+      '--reservation-label',
       type=arg_parsers.ArgDict(spec={
           'key': str,
           'value': str,
       }),
       hidden=True,
       help="""
-The key and values of the label of the allocation resource. Required if the
-value of `--allocation-affinity` is `specific`.
+The key and values of the label of the reservation resource. Required if the
+value of `--reservation-affinity` is `specific`.
 
-*key*::: The label key of allocation resource.
+*key*::: The label key of reservation resource.
 
-*value*::: The label value of allocation resource.
+*value*::: The label value of reservation resource.
 """)
 
 
-def GetAllocationAffinity(args, client):
-  """Returns the message of allocation affinity for the instance."""
-  if not args.IsSpecified('allocation_affinity'):
+def GetReservationAffinity(args, client):
+  """Returns the message of reservation affinity for the instance."""
+  if not args.IsSpecified('reservation_affinity'):
     return None
 
   type_msgs = (client.messages.
-               AllocationAffinity.ConsumeAllocationTypeValueValuesEnum)
+               ReservationAffinity.ConsumeReservationTypeValueValuesEnum)
 
-  if args.allocation_affinity == 'none':
-    allocation_type = type_msgs.NO_ALLOCATION
-    allocation_key = None
-    allocation_values = []
-  elif args.allocation_affinity == 'specific':
-    allocation_type = type_msgs.SPECIFIC_ALLOCATION
-    # Currently, the key is fixed and the value is the name of the allocation.
+  if args.reservation_affinity == 'none':
+    reservation_type = type_msgs.NO_RESERVATION
+    reservation_key = None
+    reservation_values = []
+  elif args.reservation_affinity == 'specific':
+    reservation_type = type_msgs.SPECIFIC_RESERVATION
+    # Currently, the key is fixed and the value is the name of the reservation.
     # The value being a repeated field is reserved for future use when user
-    # can specify more than one allocation names from which the Vm can take
+    # can specify more than one reservation names from which the Vm can take
     # capacity from.
-    allocation_key = args.allocation_label.get('key', None)
-    allocation_values = [args.allocation_label.get('value', None)]
+    reservation_key = args.reservation_label.get('key', None)
+    reservation_values = [args.reservation_label.get('value', None)]
   else:
-    allocation_type = type_msgs.ANY_ALLOCATION
-    allocation_key = None
-    allocation_values = []
+    reservation_type = type_msgs.ANY_RESERVATION
+    reservation_key = None
+    reservation_values = []
 
-  return client.messages.AllocationAffinity(
-      consumeAllocationType=allocation_type,
-      key=allocation_key,
-      values=allocation_values)
+  return client.messages.ReservationAffinity(
+      consumeReservationType=reservation_type,
+      key=reservation_key,
+      values=reservation_values)
 
 
 def AddKerberosGroup(parser):

@@ -39,10 +39,13 @@ def InitializedInstance(msg_cls):
   Returns:
     An instance of the given class, with all fields initialized blank objects.
   """
+  def Instance(field):
+    if field.repeated:
+      return []
+    return InitializedInstance(field.message_type)
+
   args = {
-      field.name: ([] if field.repeated else
-                   InitializedInstance(field.message_type))
-      for field in msg_cls.all_fields()
+      field.name: Instance(field) for field in msg_cls.all_fields()
       if isinstance(field, messages.MessageField)
   }
   return msg_cls(**args)
@@ -215,17 +218,7 @@ class KubernetesObject(object):
   @property
   def labels(self):
     self.AssertFullObject()
-
-    if not self._m.metadata.labels:
-      self._m.metadata.labels = self._messages.ObjectMeta.LabelsValue(
-          additionalProperties=[])
-
-    return ListAsDictionaryWrapper(
-        self._m.metadata.labels.additionalProperties,
-        self._messages.ObjectMeta.LabelsValue.AdditionalProperty,
-        key_field='key',
-        value_field='value',
-    )
+    return LabelsFromMetadata(self._messages, self._m.metadata)
 
   @property
   def ready(self):
@@ -271,6 +264,16 @@ def AnnotationsFromMetadata(messages_mod, metadata):
   return ListAsDictionaryWrapper(
       metadata.annotations.additionalProperties,
       messages_mod.ObjectMeta.AnnotationsValue.AdditionalProperty,
+      key_field='key',
+      value_field='value')
+
+
+def LabelsFromMetadata(messages_mod, metadata):
+  if not metadata.labels:
+    metadata.labels = messages_mod.ObjectMeta.LabelsValue()
+  return ListAsDictionaryWrapper(
+      metadata.labels.additionalProperties,
+      messages_mod.ObjectMeta.LabelsValue.AdditionalProperty,
       key_field='key',
       value_field='value')
 

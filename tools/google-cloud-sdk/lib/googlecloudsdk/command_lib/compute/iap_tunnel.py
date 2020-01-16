@@ -28,6 +28,7 @@ import select
 import socket
 import sys
 import threading
+import time
 
 from googlecloudsdk.api_lib.compute import iap_tunnel_websocket
 from googlecloudsdk.api_lib.compute import iap_tunnel_websocket_utils as utils
@@ -64,7 +65,7 @@ def _AddBaseArgs(parser):
       help='Disables checking certificates on the WebSocket connection.')
 
 
-def AddConnectionHelperArgs(parser, tunnel_through_iap_scope):
+def AddSshTunnelArgs(parser, tunnel_through_iap_scope):
   _AddBaseArgs(parser)
   tunnel_through_iap_scope.add_argument(
       '--tunnel-through-iap',
@@ -78,6 +79,100 @@ def AddProxyServerHelperArgs(parser):
   _AddBaseArgs(parser)
 
 
+class SshTunnelArgs(object):
+  """A class to hold some options for IAP Tunnel SSH/SCP.
+
+  Attributes:
+    track: str/None, the prefix of the track for the inner gcloud.
+    project: str, the project id (string with dashes).
+    zone: str, the zone name.
+    instance: str, the instance name.
+    interface: str, the interface name.
+    pass_through_args: [str], additional args to be passed to the inner gcloud.
+  """
+
+  def __init__(self):
+    self.track = None
+    self.project = ''
+    self.zone = ''
+    self.instance = ''
+    self.interface = ''
+    self.pass_through_args = []
+
+  @staticmethod
+  def FromArgs(args, track, instance_ref, internal_interface,
+               external_interface):
+    """Construct an SshTunnelArgs from command line args and values.
+
+    Args:
+      args: The parsed commandline arguments. May or may not have had
+        AddSshTunnelArgs called.
+      track: ReleaseTrack, The currently running release track.
+      instance_ref: The target instance reference object.
+      internal_interface: The internal interface of target resource object.
+      external_interface: The external interface of target resource object, if
+        available, otherwise None.
+    Returns:
+      SshTunnelArgs or None if IAP Tunnel is disabled.
+    """
+    # If tunneling through IAP is not available, then abort.
+    if not hasattr(args, 'tunnel_through_iap'):
+      return None
+
+    # If set to connect directly to private IP address, then abort.
+    if getattr(args, 'internal_ip', False):
+      return None
+
+    if args.IsSpecified('tunnel_through_iap'):
+      # If IAP tunneling is explicitly disabled, then abort.
+      if not args.tunnel_through_iap:
+        return None
+    else:
+      # If no external interface is available, then default to using IAP
+      # tunneling and continue with code below.  Otherwise, abort.
+      if external_interface:
+        return None
+      log.status.Print('External IP address was not found; defaulting to using '
+                       'IAP tunneling.')
+
+    res = SshTunnelArgs()
+
+    res.track = track.prefix
+    res.project = instance_ref.project
+    res.zone = instance_ref.zone
+    res.instance = instance_ref.instance
+    res.interface = internal_interface.name
+
+    # The tunnel_through_iap attribute existed, so these must too.
+    if args.IsSpecified('iap_tunnel_url_override'):
+      res.pass_through_args.append(
+          '--iap-tunnel-url-override=' + args.iap_tunnel_url_override)
+    if args.iap_tunnel_insecure_disable_websocket_cert_check:
+      res.pass_through_args.append(
+          '--iap-tunnel-insecure-disable-websocket-cert-check')
+    return res
+
+  def _Members(self):
+    return (
+        self.track,
+        self.project,
+        self.zone,
+        self.instance,
+        self.interface,
+        self.pass_through_args,
+    )
+
+  def __eq__(self, other):
+    # pylint: disable=protected-access
+    return self._Members() == other._Members()
+
+  def __ne__(self, other):
+    return not self == other
+
+  def __repr__(self):
+    return 'SshTunnelArgs<%r>' % (self._Members(),)
+
+
 def DetermineLocalPort(port_arg=0):
   if not port_arg:
     port_arg = portpicker.pick_unused_port()
@@ -88,8 +183,17 @@ def DetermineLocalPort(port_arg=0):
 
 
 def _CloseLocalConnectionCallback(local_conn):
+  """Callback function to close the local connection, if any."""
   # For test WebSocket connections, there is not a local socket connection.
   if local_conn:
+    try:
+      # Calling shutdown() first is needed to promptly notify the process on
+      # the other side of the connection that it is closing. This allows that
+      # other process, whether over TCP or stdin, to promptly terminate rather
+      # that waiting for the next time that the process tries to send data.
+      local_conn.shutdown(socket.SHUT_RDWR)
+    except EnvironmentError:
+      pass
     try:
       local_conn.close()
     except EnvironmentError:
@@ -147,7 +251,7 @@ class _StdinSocket(object):
 
   def __init__(self):
     # This is only used in Unix.
-    self._stdin_eof = False
+    self._stdin_closed = False
 
   def send(self, data):  # pylint: disable=invalid-name
     files.WriteStreamBytes(sys.stdout, data)
@@ -183,9 +287,14 @@ class _StdinSocket(object):
     # Closing stdin doesn't help, because it doesn't unblock read() calls.
     # Also it causes problems, such as segfaulting in python2 and blocking in
     # python3.
-    pass
+    self.shutdown(socket.SHUT_RD)
 
-  # pytype: disable=module-attr
+  def shutdown(self, how):  # pylint: disable=invalid-name
+    # Shutting down read only (SHUT_RD) on Unix only (no change/effect on
+    # Windows)
+    if how in (socket.SHUT_RDWR, socket.SHUT_RD):
+      self._stdin_closed = True
+
   def _RecvWindows(self, bufsize):
     """Reads data from std in Windows.
 
@@ -200,13 +309,12 @@ class _StdinSocket(object):
     # STD_INPUT_HANDLE is -10
     h = ctypes.windll.kernel32.GetStdHandle(-10)
     buf = ctypes.create_string_buffer(bufsize)
-    number_of_bytes_read = wintypes.DWORD()  # pytype: disable=not-callable
+    number_of_bytes_read = wintypes.DWORD()
     ok = ctypes.windll.kernel32.ReadFile(
         h, buf, bufsize, ctypes.byref(number_of_bytes_read), None)
     if not ok:
       raise socket.error(errno.EIO, 'stdin ReadFile failed')
     return buf.raw[:number_of_bytes_read.value]
-  # pytype: enable=module-attr
 
   class _EOFError(Exception):
     pass
@@ -224,39 +332,14 @@ class _StdinSocket(object):
     # is to make stdin non-blocking. To ensure at least 1 byte is received, we
     # read the first byte blocking.
     b = b''
-    if self._stdin_eof:
-      return b
     try:
-      b += self._ReadUnixBlocking(1)
-      if bufsize > 1:
-        b += self._ReadUnixNonBlocking(bufsize-1)
+      while not self._stdin_closed:
+        b = self._ReadUnixNonBlocking(bufsize)
+        if b:
+          break
+        time.sleep(0.001)
     except _StdinSocket._EOFError:
-      # We need to remember if an EOF is received because additional data can
-      # be received after EOF, and our 2 reads and concatenation could otherwise
-      # hide from the caller that an EOF was received.
-      self._stdin_eof = True
-    return b
-
-  def _ReadUnixBlocking(self, bufsize):
-    """Reads from stdin on Unix in a blocking manner.
-
-    Args:
-      bufsize: The maximum number of bytes to receive. Must be positive.
-    Returns:
-      The bytes read.
-    Raises:
-      _StdinSocket._EOFError: to indicate EOF.
-    """
-    # In python 3, we need to read stdin in a binary way, not a text way to
-    # read bytes instead of str. In python 2, binary mode vs text mode only
-    # matters on Windows.
-    if six.PY2:
-      b = sys.stdin.read(bufsize)
-    else:
-      b = sys.stdin.buffer.read(bufsize)
-    if not b:
-      # In python 2 and 3, EOF is indicated by returning b''.
-      raise _StdinSocket._EOFError
+      self._stdin_closed = True
     return b
 
   def _ReadUnixNonBlocking(self, bufsize):
@@ -269,6 +352,9 @@ class _StdinSocket(object):
     Raises:
       _StdinSocket._EOFError: to indicate EOF.
     """
+    # In python 3, we need to read stdin in a binary way, not a text way to
+    # read bytes instead of str. In python 2, binary mode vs text mode only
+    # matters on Windows.
     import fcntl  # pylint: disable=g-import-not-at-top
     old_flags = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
     try:
@@ -467,81 +553,6 @@ class IapTunnelProxyServerHelper(_BaseIapTunnelHelper):
       log.info('Socket error [%s] while receiving from client.', str(e))
     except:  # pylint: disable=bare-except
       log.exception('Error while receiving from client.')
-
-
-# TODO(b/119212951): Investigate alternatives to opening a local port like
-#                    ssh_config ProxyCommand and PuTTY plink.exe
-# TODO(b/119622656): Implement as context manager
-class IapTunnelConnectionHelper(_BaseIapTunnelHelper):
-  """Facilitates connections by opening a port and connecting through IAP."""
-
-  def __init__(self, args, project, zone, instance, interface, port):
-    super(IapTunnelConnectionHelper, self).__init__(
-        args, project, zone, instance, interface, port)
-    self._local_port = DetermineLocalPort()
-    self._server_sockets = []
-    self._listen_thread = None
-
-  def __del__(self):
-    self._CloseServerSocket()
-
-  def StartListener(self, accept_multiple_connections=False):
-    """Start a server socket and listener thread."""
-    self._server_sockets = _OpenLocalTcpSockets('localhost', self._local_port)
-    self._listen_thread = threading.Thread(
-        target=functools.partial(self._ListenAndConnect,
-                                 accept_multiple_connections))
-    self._listen_thread.daemon = True
-    self._listen_thread.start()
-
-  def StopListener(self):
-    self._CloseServerSocket()
-    self._shutdown = True
-
-  def GetLocalPort(self):
-    return self._local_port
-
-  def _AcceptAndHandleNewConnection(self):
-    """Accept and handle one connection."""
-    conn = None
-    try:
-      conn, client_socket_address = self._server_sockets[0].accept()
-      try:
-        self._RunReceiveLocalData(conn, repr(client_socket_address))
-      except Exception as e:  # pylint: disable=broad-except
-        if isinstance(e, EnvironmentError):
-          log.debug('Socket error [%s] while receiving from client.', str(e))
-        else:
-          log.debug('Error while receiving from client.', exc_info=True)
-        raise
-    finally:
-      try:
-        if conn:
-          conn.close()
-      except EnvironmentError:
-        pass
-
-  def _CloseServerSocket(self):
-    log.debug('Stopping server.')
-    try:
-      for server_socket in self._server_sockets:
-        server_socket.close()
-    except EnvironmentError:
-      pass
-
-  def _ListenAndConnect(self, accept_multiple_connections):
-    """Listen for connection and connect WebSocket IAP Tunnel."""
-    try:
-      if accept_multiple_connections:
-        while not self._shutdown:
-          try:
-            self._AcceptAndHandleNewConnection()
-          except:  # pylint: disable=bare-except
-            pass
-      else:
-        self._AcceptAndHandleNewConnection()
-    finally:
-      self._CloseServerSocket()
 
 
 class IapTunnelStdinHelper(_BaseIapTunnelHelper):

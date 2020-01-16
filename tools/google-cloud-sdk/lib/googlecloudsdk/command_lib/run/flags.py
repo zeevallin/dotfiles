@@ -19,16 +19,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
 import re
 
 from googlecloudsdk.api_lib.run import global_methods
 from googlecloudsdk.command_lib.functions.deploy import env_vars_util
 from googlecloudsdk.command_lib.run import config_changes
 from googlecloudsdk.command_lib.run import exceptions as serverless_exceptions
-from googlecloudsdk.command_lib.run import local_config
 from googlecloudsdk.command_lib.run import source_ref as source_ref_util
+from googlecloudsdk.command_lib.util.args import labels_util
 from googlecloudsdk.command_lib.util.args import map_util
+from googlecloudsdk.command_lib.util.args import repeated
 from googlecloudsdk.core import exceptions
 from googlecloudsdk.core import log
 from googlecloudsdk.core import properties
@@ -62,7 +62,16 @@ def _AddImageArg(parser):
   """Add an image resource arg."""
   parser.add_argument(
       '--image',
-      help='The path to the GCR container to deploy.')
+      help='Path to the GCR container to deploy.')
+
+
+def AddAllowUnauthenticatedFlag(parser):
+  """Add the --allow-unauthenticated flag."""
+  parser.add_argument(
+      '--allow-unauthenticated',
+      default=False,
+      action='store_true',
+      help='True to allow unauthenticated access to the service.')
 
 
 def AddAsyncFlag(parser):
@@ -77,8 +86,9 @@ def AddEndpointVisibilityEnum(parser):
   parser.add_argument(
       '--connectivity',
       choices=_VISIBILITY_MODES,
-      help=('If \'external\', the service can be invoked through the internet, '
-            'in addition to through the cluster network.'))
+      help=('Defaults to \'external\'. If \'external\', the service can be '
+            'invoked through the internet, in addition to through the cluster '
+            'network. Only applicable to Cloud Run on Kubernetes Engine.'))
 
 
 def AddServiceFlag(parser):
@@ -98,7 +108,7 @@ def AddSourceRefFlags(parser):
 def AddRegionArg(parser):
   """Add a region arg."""
   parser.add_argument(
-      '--region', help='The region in which the resource can be found. '
+      '--region', help='Region in which the resource can be found. '
       'Alternatively, set the property [run/region].')
 
 
@@ -113,7 +123,7 @@ def AddRegionArgWithDefault(parser):
   """
   parser.add_argument(
       '--region', default='us-central1',
-      help='The region in which to list the resources.')
+      help='Region in which to list the resources.')
 
 
 def AddFunctionArg(parser):
@@ -127,6 +137,18 @@ def AddFunctionArg(parser):
       """)
 
 
+def AddCloudSQLFlags(parser):
+  """Add flags for setting CloudSQL stuff."""
+  repeated.AddPrimitiveArgs(
+      parser,
+      'Service',
+      'cloudsql-instances',
+      'CloudSQL instances',
+      """You can specify a name of a CloudSQL instance if it's in the same
+      project and region as your Cloud Run service; otherwise specify
+      <project>:<region>:<instance> for the instance.""")
+
+
 def AddMutexEnvVarsFlags(parser):
   """Add flags for creating updating and deleting env vars."""
   # TODO(b/119837621): Use env_vars_util.AddUpdateEnvVarsFlags when
@@ -138,7 +160,7 @@ def AddMutexEnvVarsFlags(parser):
 
   group = parser.add_mutually_exclusive_group()
   update_remove_group = group.add_argument_group(
-      help=('Only --update-{0} and --remove-{0} can be used together.  If both '
+      help=('Only --update-{0} and --remove-{0} can be used together. If both '
             'are specified, --remove-{0} will be applied first.'
            ).format(flag_name))
   map_util.AddMapUpdateFlag(update_remove_group, flag_name, long_name,
@@ -155,12 +177,18 @@ def AddMemoryFlag(parser):
                       help='Set a memory limit. Ex: 1Gi, 512Mi.')
 
 
+def AddCpuFlag(parser):
+  parser.add_argument('--cpu',
+                      help='Set a CPU limit in Kubernetes cpu units. '
+                           'Ex: .5, 500m, 2.')
+
+
 def AddConcurrencyFlag(parser):
   parser.add_argument('--concurrency',
                       help='Set the number of concurrent requests allowed per '
-                      'instance. A concurrency of 0 indicates any number of '
-                      'concurrent requests are allowed. To unset this field, '
-                      'provide the special value `default`.')
+                      'instance. A concurrency of 0 or unspecified indicates '
+                      'any number of concurrent requests are allowed. To unset '
+                      'this field, provide the special value `default`.')
 
 
 def AddTimeoutFlag(parser):
@@ -172,11 +200,40 @@ def AddTimeoutFlag(parser):
       '10 seconds.')
 
 
+def AddServiceAccountFlag(parser):
+  parser.add_argument(
+      '--service-account',
+      help='Email address of the IAM service account associated with the '
+      'revision of the service. The service account represents the identity of '
+      'the running revision, and determines what permissions the revision has. '
+      'If not provided, the revision will use the project\'s default service '
+      'account.')
+
+
 def _HasEnvChanges(args):
   """True iff any of the env var flags are set."""
   env_flags = ['update_env_vars', 'set_env_vars',
                'remove_env_vars', 'clear_env_vars']
   return any(args.IsSpecified(flag) for flag in env_flags)
+
+
+def _HasCloudSQLChanges(args):
+  """True iff any of the cloudsql flags are set."""
+  instances_flags = ['add_cloudsql_instances', 'set_cloudsql_instances',
+                     'remove_cloudsql_instances', 'clear_cloudsql_instances']
+  # hasattr check is to allow the same code to work for release tracks that
+  # don't have the args at all yet.
+  return any(hasattr(args, flag) and args.IsSpecified(flag)
+             for flag in instances_flags)
+
+
+def _HasLabelChanges(args):
+  """True iff any of the label flags are set."""
+  label_flags = ['update_labels', 'clear_labels', 'remove_labels']
+  # hasattr check is to allow the same code to work for release tracks that
+  # don't have the args at all yet.
+  return any(hasattr(args, flag) and args.IsSpecified(flag)
+             for flag in label_flags)
 
 
 def _GetEnvChanges(args):
@@ -203,6 +260,14 @@ def GetConfigurationChanges(args):
   if _HasEnvChanges(args):
     changes.append(_GetEnvChanges(args))
 
+  if _HasCloudSQLChanges(args):
+    region = GetRegion(args)
+    project = (getattr(args, 'project', None) or
+               properties.VALUES.core.project.Get(required=True))
+    changes.append(config_changes.CloudSQLChanges(project, region, args))
+
+  if 'cpu' in args and args.cpu:
+    changes.append(config_changes.ResourceChanges(cpu=args.cpu))
   if 'memory' in args and args.memory:
     changes.append(config_changes.ResourceChanges(memory=args.memory))
   if 'concurrency' in args and args.concurrency:
@@ -225,6 +290,15 @@ def GetConfigurationChanges(args):
       raise ArgumentError(
           'The --timeout argument must be a positive time duration.')
     changes.append(config_changes.TimeoutChanges(timeout=timeout_secs))
+  if 'service_account' in args and args.service_account:
+    changes.append(
+        config_changes.ServiceAccountChanges(
+            service_account=args.service_account))
+  if _HasLabelChanges(args):
+    diff = labels_util.Diff.FromUpdateArgs(args)
+    if diff.MayHaveUpdates():
+      changes.append(config_changes.LabelChanges(diff))
+
   return changes
 
 
@@ -259,22 +333,11 @@ def GetSourceRef(source_arg, image_arg):
         'You must provide a container image using the --image flag.')
 
 
-def GetLocalConfig(args):
-  src = getattr(args, 'source', None)
-  if not src:
-    return None
-  fname = os.path.join(src, local_config.DEFAULT_LOCAL_CONFIG_NAME)
-  if not os.path.exists(fname):
-    return None
-  return local_config.LocalConfig.ParseFrom(fname)
-
-
 def GetRegion(args, prompt=False):
   """Prompt for region if not provided.
 
   Region is decided in the following order:
   - region argument;
-  - local config file;
   - run/region gcloud config;
   - compute/region gcloud config;
   - prompt user.
@@ -288,9 +351,6 @@ def GetRegion(args, prompt=False):
   """
   if getattr(args, 'region', None):
     return args.region
-  conf = GetLocalConfig(args)
-  if conf and conf.region:
-    return conf.region
   if properties.VALUES.run.region.IsExplicitlySet():
     return properties.VALUES.run.region.Get()
   if properties.VALUES.compute.region.IsExplicitlySet():
@@ -300,6 +360,9 @@ def GetRegion(args, prompt=False):
     idx = console_io.PromptChoice(
         all_regions, message='Please specify a region:\n', cancel_option=True)
     region = all_regions[idx]
+    # set the region on args, so we're not embarassed the next time we call
+    # GetRegion
+    args.region = region
     log.status.Print(
         'To make this the default region, run '
         '`gcloud config set run/region {}`.\n'.format(region))
@@ -323,3 +386,40 @@ def ValidateClusterArgs(args):
         'Connecting to a cluster requires a cluster location to be specified.'
         'Either set the run/cluster_location property '
         'or use the --cluster-location flag.')
+
+
+def VerifyOnePlatformFlags(args):
+  """Raise ConfigurationError if args includes GKE only arguments."""
+  if getattr(args, 'connectivity', None):
+    raise serverless_exceptions.ConfigurationError(
+        'The `--connectivity=[internal|external]` flag '
+        'is not supported on OnePlatform.')
+
+  if getattr(args, 'cpu', None):
+    raise serverless_exceptions.ConfigurationError(
+        'The `--cpu flag is not supported on OnePlatform.')
+
+
+def VerifyGKEFlags(args):
+  """Raise ConfigurationError if args includes OnePlatform only arguments."""
+  if getattr(args, 'allow_unauthenticated', None):
+    raise serverless_exceptions.ConfigurationError(
+        'The `--allow-unauthenticated` flag '
+        'is not supported with Cloud Run on GKE.')
+
+  if getattr(args, 'service_account', None):
+    raise serverless_exceptions.ConfigurationError(
+        'The `--service-account` flag '
+        'is not supported with Cloud Run on GKE.')
+
+
+def IsGKE(args):
+  """Returns True if args specify GKE.
+
+  Args:
+    args: Namespace, The args namespace.
+
+  Caller must add resource_args.CLUSTER_PRESENTATION to concept parser
+  first.
+  """
+  return bool(args.CONCEPTS.cluster.Parse())

@@ -24,6 +24,13 @@ DOCS_URL = 'https://cloud.google.com/data-catalog/docs/'
 class Collections(enum.Enum):
   """Collections for all supported apis."""
 
+  ENTRIES = (
+      'entries',
+      'entries',
+      {},
+      [],
+      True
+  )
   PROJECTS = (
       'projects',
       'projects/{projectsId}',
@@ -31,12 +38,28 @@ class Collections(enum.Enum):
       [u'projectsId'],
       True
   )
-  PROJECTS_TAGTEMPLATES = (
-      'projects.tagTemplates',
+  PROJECTS_LOCATIONS = (
+      'projects.locations',
+      'projects/{projectsId}/locations/{locationsId}',
+      {},
+      [u'projectsId', u'locationsId'],
+      True
+  )
+  PROJECTS_LOCATIONS_ENTRYGROUPS = (
+      'projects.locations.entryGroups',
+      'projects/{projectsId}/locations/{locationsId}/entryGroups/'
+      '{entryGroupsId}',
+      {},
+      [u'projectsId', u'locationsId', u'entryGroupsId'],
+      True
+  )
+  PROJECTS_LOCATIONS_ENTRYGROUPS_ENTRIES = (
+      'projects.locations.entryGroups.entries',
       '{+name}',
       {
           '':
-              'projects/{projectsId}/tagTemplates/{tagTemplatesId}',
+              'projects/{projectsId}/locations/{locationsId}/entryGroups/'
+              '{entryGroupsId}/entries/{entriesId}',
       },
       [u'name'],
       True

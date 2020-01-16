@@ -27,10 +27,10 @@ class Binding(_messages.Message):
   r"""Associates `members` with a `role`.
 
   Fields:
-    condition: Unimplemented. The condition that is associated with this
-      binding. NOTE: an unsatisfied condition will not allow user access via
-      current binding. Different bindings, including their conditions, are
-      examined independently.
+    condition: The condition that is associated with this binding. NOTE: An
+      unsatisfied condition will not allow user access via current binding.
+      Different bindings, including their conditions, are examined
+      independently.
     members: Specifies the identities requesting access for a Cloud Platform
       resource. `members` can have the following values:  * `allUsers`: A
       special identifier that represents anyone who is    on the internet;
@@ -42,8 +42,8 @@ class Binding(_messages.Message):
       service    account. For example, `my-other-
       app@appspot.gserviceaccount.com`.  * `group:{emailid}`: An email address
       that represents a Google group.    For example, `admins@example.com`.
-      * `domain:{domain}`: A Google Apps domain name that represents all the
-      users of that domain. For example, `google.com` or `example.com`.
+      * `domain:{domain}`: The G Suite domain (primary) that represents all
+      the    users of that domain. For example, `google.com` or `example.com`.
     role: Role that is assigned to `members`. For example, `roles/viewer`,
       `roles/editor`, or `roles/owner`.
   """
@@ -54,10 +54,7 @@ class Binding(_messages.Message):
 
 
 class CreateSnapshotRequest(_messages.Message):
-  r"""Request for the `CreateSnapshot` method.<br><br> <b>BETA:</b> This
-  feature is part of a beta release. This API might be changed in backward-
-  incompatible ways and is not recommended for production use. It is not
-  subject to any SLA or deprecation policy.
+  r"""Request for the `CreateSnapshot` method.
 
   Messages:
     LabelsValue: See <a href="https://cloud.google.com/pubsub/docs/labels">
@@ -157,10 +154,7 @@ class Expr(_messages.Message):
 
 
 class ListSnapshotsResponse(_messages.Message):
-  r"""Response for the `ListSnapshots` method.<br><br> <b>BETA:</b> This
-  feature is part of a beta release. This API might be changed in backward-
-  incompatible ways and is not recommended for production use. It is not
-  subject to any SLA or deprecation policy.
+  r"""Response for the `ListSnapshots` method.
 
   Fields:
     nextPageToken: If not empty, indicates that there may be more snapshot
@@ -188,10 +182,7 @@ class ListSubscriptionsResponse(_messages.Message):
 
 
 class ListTopicSnapshotsResponse(_messages.Message):
-  r"""Response for the `ListTopicSnapshots` method.<br><br> <b>BETA:</b> This
-  feature is part of a beta release. This API might be changed in backward-
-  incompatible ways and is not recommended for production use. It is not
-  subject to any SLA or deprecation policy.
+  r"""Response for the `ListTopicSnapshots` method.
 
   Fields:
     nextPageToken: If not empty, indicates that there may be more snapshots
@@ -389,6 +380,14 @@ class PubsubMessage(_messages.Message):
       read by a subscriber that receives a `PubsubMessage` via a `Pull` call
       or a push delivery. It must not be populated by the publisher in a
       `Publish` call.
+    orderingKey: Identifies related messages for which publish order should be
+      respected. If a `Subscription` has `enable_message_ordering` set to
+      `true`, messages published with the same `ordering_key` value will be
+      delivered to subscribers in the order in which they are received by the
+      Pub/Sub system. <b>EXPERIMENTAL:</b> This feature is part of a closed
+      alpha release. This API might be changed in backward-incompatible ways
+      and is not recommended for production use. It is not subject to any SLA
+      or deprecation policy.
     publishTime: The time at which the message was published, populated by the
       server when it receives the `Publish` call. It must not be populated by
       the publisher in a `Publish` call.
@@ -421,7 +420,8 @@ class PubsubMessage(_messages.Message):
   attributes = _messages.MessageField('AttributesValue', 1)
   data = _messages.BytesField(2)
   messageId = _messages.StringField(3)
-  publishTime = _messages.StringField(4)
+  orderingKey = _messages.StringField(4)
+  publishTime = _messages.StringField(5)
 
 
 class PubsubProjectsSnapshotsCreateRequest(_messages.Message):
@@ -982,10 +982,7 @@ class ReceivedMessage(_messages.Message):
 
 
 class SeekRequest(_messages.Message):
-  r"""Request for the `Seek` method. <br><br> <b>BETA:</b> This feature is
-  part of a beta release. This API might be changed in backward-incompatible
-  ways and is not recommended for production use. It is not subject to any SLA
-  or deprecation policy.
+  r"""Request for the `Seek` method.
 
   Fields:
     snapshot: The snapshot to seek to. The snapshot's topic must be the same
@@ -1029,10 +1026,7 @@ class Snapshot(_messages.Message):
   href="https://cloud.google.com/pubsub/docs/replay-overview">Seek</a>
   operations, which allow you to manage message acknowledgments in bulk. That
   is, you can set the acknowledgment state of messages in an existing
-  subscription to the state captured by a snapshot.<br><br> <b>BETA:</b> This
-  feature is part of a beta release. This API might be changed in backward-
-  incompatible ways and is not recommended for production use. It is not
-  subject to any SLA or deprecation policy.
+  subscription to the state captured by a snapshot.
 
   Messages:
     LabelsValue: See <a href="https://cloud.google.com/pubsub/docs/labels">
@@ -1175,6 +1169,13 @@ class Subscription(_messages.Message):
       delivery, this value is also used to set the request timeout for the
       call to the push endpoint.  If the subscriber never acknowledges the
       message, the Pub/Sub system will eventually redeliver the message.
+    enableMessageOrdering: If true, messages published with the same
+      `ordering_key` in `PubsubMessage` will be delivered to the subscribers
+      in the order in which they are received by the Pub/Sub system.
+      Otherwise, they may be delivered in any order. <b>EXPERIMENTAL:</b> This
+      feature is part of a closed alpha release. This API might be changed in
+      backward-incompatible ways and is not recommended for production use. It
+      is not subject to any SLA or deprecation policy.
     expirationPolicy: A policy that specifies the conditions for this
       subscription's expiration. A subscription is considered active as long
       as any connected subscriber is successfully consuming messages from the
@@ -1191,10 +1192,7 @@ class Subscription(_messages.Message):
       `retain_acked_messages` is true, then this also configures the retention
       of acknowledged messages, and thus configures how far back in time a
       `Seek` can be done. Defaults to 7 days. Cannot be more than 7 days or
-      less than 10 minutes.<br><br> <b>BETA:</b> This feature is part of a
-      beta release. This API might be changed in backward-incompatible ways
-      and is not recommended for production use. It is not subject to any SLA
-      or deprecation policy.
+      less than 10 minutes.
     name: The name of the subscription. It must have the format
       `"projects/{project}/subscriptions/{subscription}"`. `{subscription}`
       must start with a letter, and contain only letters (`[A-Za-z]`), numbers
@@ -1209,10 +1207,7 @@ class Subscription(_messages.Message):
       even if they are acknowledged, until they fall out of the
       `message_retention_duration` window. This must be true if you would like
       to <a href="https://cloud.google.com/pubsub/docs/replay-
-      overview#seek_to_a_time"> Seek to a timestamp</a>. <br><br> <b>BETA:</b>
-      This feature is part of a beta release. This API might be changed in
-      backward-incompatible ways and is not recommended for production use. It
-      is not subject to any SLA or deprecation policy.
+      overview#seek_to_a_time"> Seek to a timestamp</a>.
     topic: The name of the topic from which this subscription is receiving
       messages. Format is `projects/{project}/topics/{topic}`. The value of
       this field will be `_deleted-topic_` if the topic has been deleted.
@@ -1244,13 +1239,14 @@ class Subscription(_messages.Message):
     additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
 
   ackDeadlineSeconds = _messages.IntegerField(1, variant=_messages.Variant.INT32)
-  expirationPolicy = _messages.MessageField('ExpirationPolicy', 2)
-  labels = _messages.MessageField('LabelsValue', 3)
-  messageRetentionDuration = _messages.StringField(4)
-  name = _messages.StringField(5)
-  pushConfig = _messages.MessageField('PushConfig', 6)
-  retainAckedMessages = _messages.BooleanField(7)
-  topic = _messages.StringField(8)
+  enableMessageOrdering = _messages.BooleanField(2)
+  expirationPolicy = _messages.MessageField('ExpirationPolicy', 3)
+  labels = _messages.MessageField('LabelsValue', 4)
+  messageRetentionDuration = _messages.StringField(5)
+  name = _messages.StringField(6)
+  pushConfig = _messages.MessageField('PushConfig', 7)
+  retainAckedMessages = _messages.BooleanField(8)
+  topic = _messages.StringField(9)
 
 
 class TestIamPermissionsRequest(_messages.Message):
@@ -1337,10 +1333,7 @@ class Topic(_messages.Message):
 
 
 class UpdateSnapshotRequest(_messages.Message):
-  r"""Request for the UpdateSnapshot method.<br><br> <b>BETA:</b> This feature
-  is part of a beta release. This API might be changed in backward-
-  incompatible ways and is not recommended for production use. It is not
-  subject to any SLA or deprecation policy.
+  r"""Request for the UpdateSnapshot method.
 
   Fields:
     snapshot: The updated snapshot object.

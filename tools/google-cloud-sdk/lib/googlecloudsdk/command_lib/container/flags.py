@@ -181,6 +181,30 @@ The default Kubernetes version is available using the following command.
   return parser.add_argument('--cluster-version', help=help, hidden=suppressed)
 
 
+def AddReleaseChannelFlag(parser):
+  """Adds a --release-channel flag to the given parser."""
+  help_text = """\
+Release channel a cluster is subscribed to.
+
+When a cluster is subscribed to a release channel, Google maintains both the
+master version and the node version. Node auto-upgrade defaults to true and
+cannot be disabled. Updates to version related fields (e.g. --cluster-version)
+return an error.
+"""
+
+  return parser.add_argument(
+      '--release-channel',
+      metavar='CHANNEL',
+      choices={
+          'rapid': """\
+'rapid' channel clusters are the first to receive the latest releases of
+Kubernetes and other components.
+"""
+      },
+      help=help_text,
+      hidden=False)
+
+
 def AddClusterAutoscalingFlags(parser, update_group=None, hidden=False):
   """Adds autoscaling related flags to parser.
 
@@ -288,6 +312,27 @@ def AddAcceleratorArgs(parser):
       *count*::: (Optional) The number of accelerators to attach to the
       instances. The default value is 1.
       """)
+
+
+def AddAutoscalingProfilesFlag(parser, hidden=False):
+  """Adds autoscaling profiles flag to parser.
+
+  Autoscaling profiles flag is --autoscaling-profile.
+
+  Args:
+    parser: A given parser.
+    hidden: If true, suppress help text for added options.
+  """
+  parser.add_argument(
+      '--autoscaling-profile',
+      required=False,
+      default=None,
+      help="""\
+         Set autoscaling behaviour, choices are 'optimize_utilization' and 'balanced'.
+         Default is 'balanced'.
+      """,
+      hidden=hidden,
+      type=str)
 
 
 def AddAutoprovisioningFlags(parser, hidden=False):
@@ -665,7 +710,10 @@ more info."""
       help=help_text)
 
 
-def AddEnableAutoUpgradeFlag(parser, for_node_pool=False, suppressed=False):
+def AddEnableAutoUpgradeFlag(parser,
+                             for_node_pool=False,
+                             suppressed=False,
+                             default=None):
   """Adds a --enable-autoupgrade flag to parser."""
   if for_node_pool:
     help_text = """\
@@ -680,15 +728,21 @@ Sets autoupgrade feature for a cluster's default node-pool(s).
   $ {command} example-cluster --enable-autoupgrade
 """
   help_text += """
-See https://cloud.google.com/kubernetes-engine/docs/node-management for more \
+See https://cloud.google.com/kubernetes-engine/docs/node-auto-upgrades for more \
 info."""
 
   parser.add_argument(
       '--enable-autoupgrade',
       action='store_true',
-      default=None,
+      default=default,
       help=help_text,
       hidden=suppressed)
+
+
+# Warn GA customers about the future node auto-upgrade default value change.
+# At the same time we will release the actual change to Alpha/Beta in parallel.
+def WarnGAForFutureAutoUpgradeChange():
+  log.warning(util.WARN_GA_FUTURE_AUTOUPGRADE_CHANGE)
 
 
 def AddTagsFlag(parser, help_text):
@@ -1205,27 +1259,32 @@ def AddWorkloadMetadataFromNodeFlag(parser, hidden=False):
     parser: A given parser.
     hidden: Whether or not to hide the help text.
   """
-  help_text = """\
-Sets the node metadata option for workload metadata configuration. This feature
-is scheduled to be deprecated in the future and later removed.
-"""
 
   parser.add_argument(
       '--workload-metadata-from-node',
       default=None,
       choices={
-          'SECURE': 'Prevents workloads not in hostNetwork from accessing '
+          'SECURE': 'Prevents pods not in hostNetwork from accessing '
                     'certain VM metadata, specifically kube-env, which '
                     'contains Kubelet credentials, and the instance identity '
                     'token. This is a temporary security solution available '
                     'while the bootstrapping process for cluster nodes is '
-                    'being redesigned with significant security improvements.',
-          'EXPOSED': 'Exposes all VM metadata to workloads.',
+                    'being redesigned with significant security improvements. '
+                    'This feature is scheduled to be deprecated in the future '
+                    'and later removed.',
+          'EXPOSED': "Pods running in this nodepool have access to the node's "
+                     "underlying Compute Engine Metadata Server.",
+          'GKE_METADATA_SERVER':
+              'Run the Kubernetes Engine Metadata Server on this node. The Kubernetes '
+              'Engine Metadata Server exposes a metadata API to workloads that is '
+              'compatible with the V1 Compute Metadata APIs exposed by the Compute Engine '
+              'and App Engine Metadata Servers. This feature can only be enabled if '
+              'Workload Identity is enabled at the cluster level.',
           'UNSPECIFIED': 'Chooses the default.',
       },
       type=lambda x: x.upper(),
       hidden=hidden,
-      help=help_text)
+      help='Type of metadata server available to pods running in the nodepool.')
 
 
 def AddTagOrDigestPositional(parser,
@@ -1560,8 +1619,7 @@ def AddTpuFlags(parser, hidden=False, enable_tpu_service_networking=False):
       help="""\
 Enable Cloud TPUs for this cluster.
 
-Can not be specified unless `--enable-kubernetes-alpha` and `--enable-ip-alias`
-are also specified.
+Can not be specified unless `--enable-ip-alias` is also specified.
 """)
 
   group = tpu_group
@@ -1723,6 +1781,11 @@ def WarnForNodeModification(args, enable_autorepair):
                 'DaemonSet.')
 
 
+def WarnForNodeVersionAutoUpgrade(args):
+  if args.IsSpecified('node_version') and args.enable_autoupgrade:
+    log.warning(util.WARN_NODE_VERSION_WITH_AUTOUPGRADE_ENABLED)
+
+
 def AddMachineTypeFlag(parser):
   """Adds --machine-type flag to the parser.
 
@@ -1762,9 +1825,19 @@ specified in the annotation.
 """
   parser.add_argument(
       '--enable-managed-pod-identity',
-      action='store_true',
+      action=actions.DeprecationAction(
+          '--[no-]enable-managed-pod-identity',
+          warn="""\
+Alpha flag `--[no-]enable-managed-pod-identity` is deprecated and will be removed
+in a future release.
+
+Instead, use the beta `--identity-namespace` flag:
+
+    $ gcloud beta container clusters create --identity-namespace=PROJECT_NAME.svc.id.goog
+""",
+          removed=False,
+          action='store_true'),
       default=False,
-      # TODO(b/109942548): unhide this flag for Beta
       hidden=True,
       help=enable_help_text)
   sa_help_text = """\
@@ -1777,10 +1850,52 @@ Must be set with `--enable-managed-pod-identity`.
 """
   parser.add_argument(
       '--federating-service-account',
+      action=actions.DeprecationAction(
+          '--federating-service-account',
+          warn="""\
+Alpha flag `--federating-service-account` is deprecated and will be removed
+in a future release.
+
+Instead, use the beta `--identity-namespace` flag:
+
+    $ gcloud beta container clusters create --identity-namespace=PROJECT_NAME.svc.id.goog
+""",
+          removed=False),
       default=None,
-      # TODO(b/109942548): unhide this flag for Beta
       hidden=True,
       help=sa_help_text)
+
+
+def AddWorkloadIdentityFlags(parser):
+  """Adds Workload Identity flags to the parser."""
+  # TODO(b/126751755): Once we have a beta docs page, update the documentation
+  # link in the help text.
+  parser.add_argument(
+      '--identity-namespace',
+      default=None,
+      hidden=True,
+      help="""\
+Enable Workload Identity on the cluster.
+
+When enabled, Kubernetes service accounts will be able to act as Cloud IAM
+Service Accounts, through the provided identity namespace.
+
+Currently, the only accepted identity namespace is the identity namespace of
+the Cloud project containing the cluster, `PROJECT_NAME.svc.id.goog`.
+""")
+
+
+def AddWorkloadIdentityUpdateFlags(parser):
+  # TODO(b/126751755): Once we have a beta docs page, update the documentation
+  # link in the help text.
+  parser.add_argument(
+      '--disable-workload-identity',
+      default=False,
+      action='store_true',
+      hidden=True,
+      help="""\
+Disable Workload Identity on the cluster.
+""")
 
 
 def AddResourceUsageExportFlags(parser, add_clear_flag=False, hidden=False):
@@ -1863,6 +1978,32 @@ This is currently only available on Alpha clusters, specified by using
       action='store_true')
 
 
+def AddEnableIntraNodeVisibilityFlag(parser, hidden=False):
+  """Adds --enable-intra-node-visibility flag to the parser.
+
+  When enabled, the intra-node traffic is visible to VPC network.
+
+  Args:
+    parser: A given parser.
+    hidden: If true, suppress help text for added options.
+  """
+  parser.add_argument(
+      '--enable-intra-node-visibility',
+      default=None,
+      hidden=hidden,
+      action='store_true',
+      help="""\
+Enable Intra-node visibility for this cluster.
+
+Enabling intra-node visibility makes your intra-node pod to pod traffic
+visible to the networking fabric. With this feature, you can use VPC flow
+logging or other VPC features for intra-node traffic.
+
+This is a beta feature, enabling it on existing cluster causes the cluster
+master and the cluster nodes to restart, which might cause disruption.
+""")
+
+
 def AddVerticalPodAutoscalingFlag(parser, hidden=False):
   """Adds vertical pod autoscaling related flag to the parser.
 
@@ -1881,7 +2022,6 @@ def AddVerticalPodAutoscalingFlag(parser, hidden=False):
       action='store_true')
 
 
-# TODO(b/112194849): Explain limitation to the sandbox pods and the nodes.
 def AddSandboxFlag(parser, hidden=False):
   """Adds a --sandbox flag to the given parser.
 
@@ -1902,7 +2042,7 @@ def AddSandboxFlag(parser, hidden=False):
       help="""\
 Enables the requested sandbox on all nodes in the node-pool. Example:
 
-  $ {command} node-pool-1 --cluster=example-cluster --sandbox type=gvisor
+  $ {command} node-pool-1 --cluster=example-cluster --sandbox="type=gvisor"
 
 The only supported type is 'gvisor'.
       """)
@@ -2009,8 +2149,8 @@ controller or webhook are installed.
 def AddNodeGroupFlag(parser):
   """Adds --node-group flag to the parser."""
   help_text = """\
-Assign instances of this pool to run on the specified GCE node group.
-This is useful for running workloads on sole tenant nodes.
+Assign instances of this pool to run on the specified Google Compute Engine
+node group. This is useful for running workloads on sole tenant nodes.
 
 To see available sole tenant node-groups, run:
 
@@ -2027,7 +2167,6 @@ information on sole tenancy and node groups.
 
   parser.add_argument(
       '--node-group',
-      hidden=True,
       help=help_text)
 
 
@@ -2103,3 +2242,69 @@ def AddMetadataFlags(parser):
       default={},
       help=metadata_from_file_help,
       metavar='KEY=LOCAL_FILE_PATH')
+
+
+def AddEnableShieldedNodesFlags(parser):
+  """Adds a --enable-shielded-nodes flag to the given parser."""
+  help_text = """\
+Enable Shielded Nodes for this cluster. Enabling Shielded Nodes will enable a
+more secure Node credential bootstrapping implementation.
+"""
+  parser.add_argument(
+      '--enable-shielded-nodes',
+      action='store_true',
+      help=help_text,
+      hidden=True)
+
+
+def AddSurgeUpgradeFlag(parser, hidden=False):
+  """Adds surge upgrade related flag to the parser.
+
+  Args:
+    parser: A given parser.
+    hidden: Whether or not to hide the help text.
+  """
+
+  max_surge_help = """\
+Number of extra (surge) nodes to be created on each upgrade of a node pool.
+
+Specifies the number of extra (surge) nodes to be created during this node
+pool's upgrades. For example, running the following command will result in
+creating an extra node each time the node pool is upgraded:
+
+  $ {command} example-cluster --max-surge-upgrade 1
+"""
+  parser.add_argument(
+      '--max-surge-upgrade',
+      type=int,
+      default=0,
+      help=max_surge_help,
+      hidden=hidden)
+
+
+def AddMaxUnavailableUpgradeFlag(parser, hidden=False):
+  """Adds --max-unavailable-upgrade flag to the parser.
+
+  Args:
+    parser: A given parser.
+    hidden: Whether or not to hide the help text.
+  """
+
+  max_unavailable_upgrade_help = """\
+Number of nodes that can be unavailable at the same time on each upgrade of a
+node pool.
+
+Specifies the number of nodes that can be unavailable at the same time while
+this node pool is being upgraded. For example, running the following command
+will result in having 3 nodes being upgraded in parallel (1 + 2), but keeping
+always at least 3 (5 - 2) available each time the node pool is upgraded:
+
+   $ {command} example-cluster --num-nodes=5 --max-surge-upgrade 1 \
+     --max-unavailable-upgrade=2
+"""
+  parser.add_argument(
+      '--max-unavailable-upgrade',
+      type=int,
+      default=1,
+      help=max_unavailable_upgrade_help,
+      hidden=hidden)

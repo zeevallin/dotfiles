@@ -79,6 +79,7 @@ def _AddMutuallyExclusiveArgs(mutex_group, release_track):
                 api_adapter.DASHBOARD: _ParseAddonDisabled,
                 api_adapter.NETWORK_POLICY: _ParseAddonDisabled,
                 api_adapter.ISTIO: _ParseAddonDisabled,
+                api_adapter.CLOUDRUN: _ParseAddonDisabled,
             }),
         dest='disable_addons',
         metavar='ADDON=ENABLED|DISABLED',
@@ -87,12 +88,14 @@ def _AddMutuallyExclusiveArgs(mutex_group, release_track):
 {ingress}=ENABLED|DISABLED
 {dashboard}=ENABLED|DISABLED
 {istio}=ENABLED|DISABLED
-{network_policy}=ENABLED|DISABLED""".format(
+{network_policy}=ENABLED|DISABLED
+{cloudrun}=ENABLED|DISABLED""".format(
     hpa=api_adapter.HPA,
     ingress=api_adapter.INGRESS,
     dashboard=api_adapter.DASHBOARD,
     network_policy=api_adapter.NETWORK_POLICY,
     istio=api_adapter.ISTIO,
+    cloudrun=api_adapter.CLOUDRUN,
     ))
 
   else:
@@ -430,6 +433,9 @@ class UpdateBeta(Update):
     flags.AddVerticalPodAutoscalingFlag(group)
     flags.AddResourceUsageExportFlags(group, add_clear_flag=True)
     flags.AddIstioConfigFlag(parser)
+    flags.AddEnableIntraNodeVisibilityFlag(group)
+    flags.AddWorkloadIdentityFlags(group)
+    flags.AddWorkloadIdentityUpdateFlags(group)
 
   def ParseUpdateOptions(self, args, locations):
     opts = container_command_util.ParseUpdateOptionsBase(args, locations)
@@ -446,10 +452,16 @@ class UpdateBeta(Update):
     opts.enable_vertical_pod_autoscaling = args.enable_vertical_pod_autoscaling
     opts.istio_config = args.istio_config
     opts.resource_usage_bigquery_dataset = args.resource_usage_bigquery_dataset
+    opts.enable_intra_node_visibility = args.enable_intra_node_visibility
     opts.clear_resource_usage_bigquery_dataset = \
         args.clear_resource_usage_bigquery_dataset
     opts.enable_network_egress_metering = args.enable_network_egress_metering
     flags.ValidateIstioConfigUpdateArgs(args.istio_config, args.disable_addons)
+
+    # Top-level update options are automatically forced to be
+    # mutually-exclusive, so we don't need special handling for these two.
+    opts.identity_namespace = args.identity_namespace
+    opts.disable_workload_identity = args.disable_workload_identity
 
     return opts
 
@@ -483,6 +495,7 @@ class UpdateAlpha(Update):
     flags.AddRemoveLabelsFlag(group)
     flags.AddNetworkPolicyFlags(group)
     flags.AddAutoprovisioningFlags(group, hidden=False)
+    flags.AddAutoscalingProfilesFlag(group, hidden=True)
     flags.AddMaintenanceWindowFlag(group, add_unset_text=True)
     flags.AddPodSecurityPolicyFlag(group)
     flags.AddEnableBinAuthzFlag(group)
@@ -490,7 +503,10 @@ class UpdateAlpha(Update):
     flags.AddVerticalPodAutoscalingFlag(group)
     flags.AddSecurityProfileForUpdateFlag(group)
     flags.AddIstioConfigFlag(parser)
+    flags.AddEnableIntraNodeVisibilityFlag(group)
     flags.AddPeeringRouteSharingFlag(group)
+    flags.AddWorkloadIdentityFlags(group)
+    flags.AddWorkloadIdentityUpdateFlags(group)
 
   def ParseUpdateOptions(self, args, locations):
     opts = container_command_util.ParseUpdateOptionsBase(args, locations)
@@ -502,6 +518,7 @@ class UpdateAlpha(Update):
     opts.max_memory = args.max_memory
     opts.min_accelerator = args.min_accelerator
     opts.max_accelerator = args.max_accelerator
+    opts.autoscaling_profile = args.autoscaling_profile
     opts.enable_pod_security_policy = args.enable_pod_security_policy
     opts.enable_binauthz = args.enable_binauthz
     opts.resource_usage_bigquery_dataset = args.resource_usage_bigquery_dataset
@@ -510,8 +527,14 @@ class UpdateAlpha(Update):
     opts.enable_vertical_pod_autoscaling = args.enable_vertical_pod_autoscaling
     opts.security_profile = args.security_profile
     opts.istio_config = args.istio_config
+    opts.enable_intra_node_visibility = args.enable_intra_node_visibility
     opts.enable_network_egress_metering = args.enable_network_egress_metering
     flags.ValidateIstioConfigUpdateArgs(args.istio_config, args.disable_addons)
     opts.enable_peering_route_sharing = args.enable_peering_route_sharing
+
+    # Top-level update options are automatically forced to be
+    # mutually-exclusive, so we don't need special handling for these two.
+    opts.identity_namespace = args.identity_namespace
+    opts.disable_workload_identity = args.disable_workload_identity
 
     return opts

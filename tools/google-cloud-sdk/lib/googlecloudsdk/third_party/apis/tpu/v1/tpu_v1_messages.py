@@ -272,13 +272,16 @@ class Node(_messages.Message):
       DELETING: TPU node is being deleted.
       REPAIRING: TPU node is being repaired and may be unusable. Details can
         be found in the `help_description` field.
-      STOPPED: 7 - Reserved. Was SUSPENDED. TPU node is stopped.
+      STOPPED: TPU node is stopped.
       STOPPING: TPU node is currently stopping.
       STARTING: TPU node is currently starting.
       PREEMPTED: TPU node has been preempted. Only applies to Preemptible TPU
         Nodes.
       TERMINATED: TPU node has been terminated due to maintenance or has
         reached the end of its life cycle (for preemptible nodes).
+      HIDING: TPU node is currently hiding.
+      HIDDEN: TPU node has been hidden.
+      UNHIDING: TPU node is currently unhiding.
     """
     STATE_UNSPECIFIED = 0
     CREATING = 1
@@ -292,6 +295,9 @@ class Node(_messages.Message):
     STARTING = 9
     PREEMPTED = 10
     TERMINATED = 11
+    HIDING = 12
+    HIDDEN = 13
+    UNHIDING = 14
 
   @encoding.MapUnrecognizedFields('additionalProperties')
   class LabelsValue(_messages.Message):
@@ -484,9 +490,11 @@ class SchedulingConfig(_messages.Message):
 
   Fields:
     preemptible: A boolean attribute.
+    reserved: Whether the node is created under a reservation.
   """
 
   preemptible = _messages.BooleanField(1)
+  reserved = _messages.BooleanField(2)
 
 
 class StandardQueryParameters(_messages.Message):

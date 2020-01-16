@@ -153,7 +153,7 @@ class AuditLogConfig(_messages.Message):
 
 
 class AuthProvider(_messages.Message):
-  r"""Configuration for an anthentication provider, including support for
+  r"""Configuration for an authentication provider, including support for
   [JSON Web Token (JWT)](https://tools.ietf.org/html/draft-ietf-oauth-json-
   web-token-32).
 
@@ -181,10 +181,11 @@ class AuthProvider(_messages.Message):
     jwksUri: URL of the provider's public key set to validate signature of the
       JWT. See [OpenID Discovery](https://openid.net/specs/openid-connect-
       discovery-1_0.html#ProviderMetadata). Optional if the key set document:
-      - can be retrieved from    [OpenID Discovery](https://openid.net/specs
-      /openid-connect-discovery-1_0.html    of the issuer.  - can be inferred
-      from the email domain of the issuer (e.g. a Google service account).
-      Example: https://www.googleapis.com/oauth2/v1/certs
+      - can be retrieved from    [OpenID
+      Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html of
+      the issuer.  - can be inferred from the email domain of the issuer (e.g.
+      a Google  service account).  Example:
+      https://www.googleapis.com/oauth2/v1/certs
   """
 
   audiences = _messages.StringField(1)
@@ -327,8 +328,8 @@ class BackendRule(_messages.Message):
         Request path: /api/company/widgetworks/user/johndoe     Translated:
         https://example.cloudfunctions.net/getUser?cid=widgetworks&uid=johndoe
         Request path: /api/company/widgetworks/user/johndoe?timezone=EST
-        Translated:   https://example.cloudfunctions.net/getUser?timezone=EST&
-        cid=widgetworks&uid=johndoe
+        Translated:     https://example.cloudfunctions.net/getUser?timezone=ES
+        T&cid=widgetworks&uid=johndoe
       APPEND_PATH_TO_ADDRESS: The request path will be appended to the backend
         address.  # Examples  Given the following operation config:
         Method path:        /api/company/{cid}/user/{uid}     Backend address:
@@ -337,8 +338,8 @@ class BackendRule(_messages.Message):
         /api/company/widgetworks/user/johndoe     Translated:
         https://example.appspot.com/api/company/widgetworks/user/johndoe
         Request path: /api/company/widgetworks/user/johndoe?timezone=EST
-        Translated:   https://example.appspot.com/api/company/widgetworks/user
-        /johndoe?timezone=EST
+        Translated:     https://example.appspot.com/api/company/widgetworks/us
+        er/johndoe?timezone=EST
     """
     PATH_TRANSLATION_UNSPECIFIED = 0
     CONSTANT_ADDRESS = 1
@@ -394,10 +395,10 @@ class Binding(_messages.Message):
   r"""Associates `members` with a `role`.
 
   Fields:
-    condition: Unimplemented. The condition that is associated with this
-      binding. NOTE: an unsatisfied condition will not allow user access via
-      current binding. Different bindings, including their conditions, are
-      examined independently.
+    condition: The condition that is associated with this binding. NOTE: An
+      unsatisfied condition will not allow user access via current binding.
+      Different bindings, including their conditions, are examined
+      independently.
     members: Specifies the identities requesting access for a Cloud Platform
       resource. `members` can have the following values:  * `allUsers`: A
       special identifier that represents anyone who is    on the internet;
@@ -409,8 +410,8 @@ class Binding(_messages.Message):
       service    account. For example, `my-other-
       app@appspot.gserviceaccount.com`.  * `group:{emailid}`: An email address
       that represents a Google group.    For example, `admins@example.com`.
-      * `domain:{domain}`: A Google Apps domain name that represents all the
-      users of that domain. For example, `google.com` or `example.com`.
+      * `domain:{domain}`: The G Suite domain (primary) that represents all
+      the    users of that domain. For example, `google.com` or `example.com`.
     role: Role that is assigned to `members`. For example, `roles/viewer`,
       `roles/editor`, or `roles/owner`.
   """
@@ -544,7 +545,7 @@ class ConfigChange(_messages.Message):
       field is used for the index (usually selector, name, or id). For maps,
       the term 'key' is used. If the field has no unique identifier, the
       numeric index is used. Examples: - visibility.rules[selector=="google.Li
-      braryService.CreateBook"].restriction -
+      braryService.ListBooks"].restriction -
       quota.metric_rules[selector=="google"].metric_costs[key=="reads"].value
       - logging.producer_destinations[0]
     newValue: Value of the changed object in the new Service configuration, in
@@ -889,8 +890,8 @@ class DocumentationRule(_messages.Message):
       is a qualified name of the element which may end in "*", indicating a
       wildcard. Wildcards are only allowed at the end and for a whole
       component of the qualified name, i.e. "foo.*" is ok, but not "foo.b*" or
-      "foo.*.bar". To specify a default for all applicable elements, the whole
-      pattern "*" is used.
+      "foo.*.bar". A wildcard will match one or more components. To specify a
+      default for all applicable elements, the whole pattern "*" is used.
   """
 
   deprecationDescription = _messages.StringField(1)
@@ -2528,12 +2529,12 @@ class QueryUserAccessResponse(_messages.Message):
 
 class Quota(_messages.Message):
   r"""Quota configuration helps to achieve fairness and budgeting in service
-  usage.  The quota configuration works this way: - The service configuration
-  defines a set of metrics. - For API calls, the quota.metric_rules maps
-  methods to metrics with   corresponding costs. - The quota.limits defines
-  limits on the metrics, which will be used for   quota checks at runtime.  An
-  example quota configuration in yaml format:     quota:      limits:       -
-  name: apiWriteQpsPerProject        metric:
+  usage.  The metric based quota configuration works this way: - The service
+  configuration defines a set of metrics. - For API calls, the
+  quota.metric_rules maps methods to metrics with   corresponding costs. - The
+  quota.limits defines limits on the metrics, which will be used for   quota
+  checks at runtime.  An example quota configuration in yaml format:
+  quota:      limits:       - name: apiWriteQpsPerProject        metric:
   library.googleapis.com/write_calls        unit: "1/min/{project}"  # rate
   limit for consumer projects        values:          STANDARD: 10000        #
   The metric rules bind all methods to the read_calls metric,      # except

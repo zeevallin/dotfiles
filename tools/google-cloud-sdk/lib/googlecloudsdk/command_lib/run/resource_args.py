@@ -76,23 +76,6 @@ def GenerateServiceName(source_ref):
   return re.sub(r'[^a-zA-Z0-9-]', '', base_name).strip('-').lower()
 
 
-class ServiceFileFallthrough(deps.Fallthrough):
-  """Fall through to reading the property from .gcloud-serverless-service."""
-
-  def __init__(self, name):
-    super(ServiceFileFallthrough, self).__init__(
-        function=None,
-        hint='put a {name} key-value pair in .gcloud-serverless-service'.format(
-            name=name))
-    self.name = name
-
-  def _Call(self, parsed_args):
-    config = flags.GetLocalConfig(parsed_args)
-    if config:
-      return getattr(config, self.name, None)
-    return None
-
-
 class DefaultFallthrough(deps.Fallthrough):
   """Use the namespace "default".
 
@@ -126,7 +109,7 @@ def NamespaceAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='namespace',
       help_text='Specific to Cloud Run on Kubernetes Engine: '
-      'The Kubernetes namespace for the {resource}',
+      'Kubernetes namespace for the {resource}',
       fallthroughs=[
           deps.PropertyFallthrough(properties.VALUES.run.namespace),
           DefaultFallthrough(),
@@ -138,46 +121,45 @@ def NamespaceAttributeConfig():
 def ServiceAttributeConfig(prompt=False):
   if prompt:
     fallthroughs = [
-        ServiceFileFallthrough('service'),
         ServicePromptFallthrough(),
     ]
   else:
     fallthroughs = []
   return concepts.ResourceParameterAttributeConfig(
       name='service',
-      help_text='The Service for the {resource}.',
+      help_text='Service for the {resource}.',
       fallthroughs=fallthroughs)
 
 
 def ConfigurationAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='configuration',
-      help_text='The Configuration for the {resource}.')
+      help_text='Configuration for the {resource}.')
 
 
 def RouteAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='route',
-      help_text='The Route for the {resource}.')
+      help_text='Route for the {resource}.')
 
 
 def RevisionAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='revision',
-      help_text='The Revision for the {resource}.')
+      help_text='Revision for the {resource}.')
 
 
 def DomainAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='domain',
-      help_text='The name of the domain to be mapped to.')
+      help_text='Name of the domain to be mapped to.')
 
 
 def ClusterAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='cluster',
       help_text='Specific to Cloud Run on Kubernetes Engine: '
-      'The name of the Kubernetes Engine cluster to use. Alternatively, set the'
+      'Name of the Kubernetes Engine cluster to use. Alternatively, set the'
       ' property [run/cluster].',
       fallthroughs=[
           deps.PropertyFallthrough(properties.VALUES.run.cluster)])
@@ -187,7 +169,7 @@ def ClusterLocationAttributeConfig():
   return concepts.ResourceParameterAttributeConfig(
       name='location',
       help_text='Specific to Cloud Run on Kubernetes Engine: '
-      'The location of the {resource}. Alternatively, set the '
+      'Zone in which the {resource} is located. Alternatively, set the '
       'property [run/cluster_location].',
       fallthroughs=[
           deps.PropertyFallthrough(
@@ -250,11 +232,43 @@ def GetNamespaceResourceSpec():
       resource_name='namespace')
 
 
+class RegionWildcardFallthrough(deps.Fallthrough):
+  """Fall through to returning the wildcard '-' for region."""
+
+  def __init__(self):
+    super(RegionWildcardFallthrough, self).__init__(
+        function=None,
+        hint='wild card matching all regions')
+
+  def _Call(self, parsed_args):
+    return '-'
+
+
+def RegionWithWildcardAttributeConfig():
+  return concepts.ResourceParameterAttributeConfig(
+      name='region',
+      help_text='Region for the {resource}.',
+      fallthroughs=[RegionWildcardFallthrough()])
+
+
+def GetOnePlatformLocationResourceSpec():
+  return concepts.ResourceSpec(
+      'run.projects.locations',
+      projectsId=concepts.DEFAULT_PROJECT_ATTRIBUTE_CONFIG,
+      locationsId=RegionWithWildcardAttributeConfig(),
+      resource_name='location')
+
+CLOUD_RUN_LOCATION_PRESENTATION = presentation_specs.ResourcePresentationSpec(
+    '--region',
+    GetOnePlatformLocationResourceSpec(),
+    'Location to list or \'-\' for all locations.',
+    required=False,
+    prefixes=False)
+
 CLUSTER_PRESENTATION = presentation_specs.ResourcePresentationSpec(
     '--cluster',
     GetClusterResourceSpec(),
     'Specific to Cloud Run on Kubernetes Engine: '
-    'The Kubernetes Engine cluster to connect to.',
+    'Kubernetes Engine cluster to connect to.',
     required=False,
     prefixes=True)
-

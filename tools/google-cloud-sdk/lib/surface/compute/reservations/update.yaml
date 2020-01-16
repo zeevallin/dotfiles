@@ -1,4 +1,4 @@
-- release_tracks: []
+- release_tracks: [ALPHA, BETA]
 
   help_text:
     brief: Update a Compute Engine reservation.
@@ -12,12 +12,24 @@
     - arg_name: vm-count
       required: true
       type: int
-      api_field: allocationsResizeRequest.specificSkuCount
+      api_field: reservationsResizeRequest.specificSkuCount
       help_text: |
         Number of VM instances can be updated. The value of this field must be an int in the
         range [1, 1000].
 
   request:
-    collection: compute.allocations
-    api_version: alpha
+    collection: compute.reservations
+    api_version: beta
     method: resize
+    ALPHA:
+      api_version: alpha
+
+  async:
+    api_version: beta
+    collection: compute.zoneOperations
+    response_name_field: selfLink
+    state:
+      field: status
+      success_values: ['DONE']
+    ALPHA:
+      api_version: alpha

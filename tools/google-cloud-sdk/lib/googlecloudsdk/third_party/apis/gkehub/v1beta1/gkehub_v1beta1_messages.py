@@ -399,9 +399,9 @@ class Membership(_messages.Message):
   Fields:
     createTime: Output only. Timestamp for when the Membership was created.
     deleteTime: Output only. Timestamp for when the Membership was deleted.
-    description: An optional description of this membership, limited to 2048
+    description: A required description of this membership, limited to 63
       characters.
-    endpoint: Endpoint information to reach this member.
+    endpoint: A MembershipEndpoint attribute.
     labels: GCP labels for this membership.
     name: Output only. The unique name of this domain resource in the format:
       `projects/[project_id]/locations/global/memberships/[membership_id]`.
@@ -462,16 +462,10 @@ class MembershipEndpoint(_messages.Message):
       west1-a/clusters/c0 It can be at the most 1000 characters in length.
     oidcConfig: OIDC configuration to use to authenticate users against with
       this member.
-    resourceId: Unique per-project identification for this endpoint (in space
-      and time) to be provided by the user at creation time. While a self_link
-      is optional for endpoints that may not be on GCP, all membership
-      endpoints must provide a unique resource_id string. It is not mutable
-      after creation. It can be at the most 1000 characters in length.
   """
 
   gcpResourceLink = _messages.StringField(1)
   oidcConfig = _messages.MessageField('OidcConfig', 2)
-  resourceId = _messages.StringField(3)
 
 
 class MembershipState(_messages.Message):
@@ -516,6 +510,10 @@ class OidcConfig(_messages.Message):
     TokenEndpointRoutabilityValueValuesEnum: Connection method to be used when
       accessing the token endpoint.
 
+  Messages:
+    ExtraParametersValue: Additional parameters required by the Identity
+      Provider
+
   Fields:
     aud: Audience claims to request when fetching the id_token - should
       include the --oidc-client-id configured for the cluster.
@@ -527,11 +525,13 @@ class OidcConfig(_messages.Message):
       with Identity Provider.
     clientSecret: Client Secret for the OAuth client to be used when
       communicating with Identity Provider.
+    extraParameters: Additional parameters required by the Identity Provider
     issuer: Identity Provider that needs to issue tokens accepted by this
       cluster, ex. https://accounts.google.com. Should match the --oidc-
       issuer-url configured for the cluster.
+    scopes: Scopes to be requested from Identity Provider
     tokenEndpoint: Endpoint to be used to obtain the id_token, ex.
-      https://www.googleapis.com/oauth2/v4/token. See https://openid.net/specs
+      https://oauth2.googleapis.com/token. See https://openid.net/specs
       /openid-connect-core-1_0.html#TokenEndpoint
     tokenEndpointRoutability: Connection method to be used when accessing the
       token endpoint.
@@ -550,13 +550,40 @@ class OidcConfig(_messages.Message):
     PUBLIC = 1
     GKE_CONNECT = 2
 
+  @encoding.MapUnrecognizedFields('additionalProperties')
+  class ExtraParametersValue(_messages.Message):
+    r"""Additional parameters required by the Identity Provider
+
+    Messages:
+      AdditionalProperty: An additional property for a ExtraParametersValue
+        object.
+
+    Fields:
+      additionalProperties: Additional properties of type ExtraParametersValue
+    """
+
+    class AdditionalProperty(_messages.Message):
+      r"""An additional property for a ExtraParametersValue object.
+
+      Fields:
+        key: Name of the additional property.
+        value: A string attribute.
+      """
+
+      key = _messages.StringField(1)
+      value = _messages.StringField(2)
+
+    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+
   aud = _messages.StringField(1, repeated=True)
   authorizationEndpoint = _messages.StringField(2)
   clientId = _messages.StringField(3)
   clientSecret = _messages.BytesField(4)
-  issuer = _messages.StringField(5)
-  tokenEndpoint = _messages.StringField(6)
-  tokenEndpointRoutability = _messages.EnumField('TokenEndpointRoutabilityValueValuesEnum', 7)
+  extraParameters = _messages.MessageField('ExtraParametersValue', 5)
+  issuer = _messages.StringField(6)
+  scopes = _messages.StringField(7, repeated=True)
+  tokenEndpoint = _messages.StringField(8)
+  tokenEndpointRoutability = _messages.EnumField('TokenEndpointRoutabilityValueValuesEnum', 9)
 
 
 class Operation(_messages.Message):

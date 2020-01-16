@@ -34,38 +34,6 @@ class AcceleratorConfig(_messages.Message):
   acceleratorTypeUri = _messages.StringField(2)
 
 
-class AllocationAffinity(_messages.Message):
-  r"""Allocation Affinity for consuming Zonal allocation.
-
-  Enums:
-    ConsumeAllocationTypeValueValuesEnum:
-
-  Fields:
-    consumeAllocationType: A ConsumeAllocationTypeValueValuesEnum attribute.
-    key: Corresponds to the label key of Allocation resource.
-    values: Corresponds to the label values of allocation resource.
-  """
-
-  class ConsumeAllocationTypeValueValuesEnum(_messages.Enum):
-    r"""ConsumeAllocationTypeValueValuesEnum enum type.
-
-    Values:
-      TYPE_UNSPECIFIED: <no description>
-      NO_ALLOCATION: Do not consume from any allocated capacity.
-      ANY_ALLOCATION: Consume any allocation available.
-      SPECIFIC_ALLOCATION: Must consume from a specific allocation. Must
-        specify key value fields for specifying the allocations.
-    """
-    TYPE_UNSPECIFIED = 0
-    NO_ALLOCATION = 1
-    ANY_ALLOCATION = 2
-    SPECIFIC_ALLOCATION = 3
-
-  consumeAllocationType = _messages.EnumField('ConsumeAllocationTypeValueValuesEnum', 1)
-  key = _messages.StringField(2)
-  values = _messages.StringField(3, repeated=True)
-
-
 class AutoscalingConfig(_messages.Message):
   r"""Autoscaling Policy config associated with the cluster.
 
@@ -92,7 +60,7 @@ class AutoscalingPolicy(_messages.Message):
     name: Output only. The "resource name" of the policy, as described in
       https://cloud.google.com/apis/design/resource_names of the form
       projects/{project_id}/regions/{region}/autoscalingPolicies/{policy_id}.
-    secondaryWorkerConfig: Required. Describes how the autoscaler will operate
+    secondaryWorkerConfig: Optional. Describes how the autoscaler will operate
       for secondary workers.
     workerConfig: Required. Describes how the autoscaler will operate for
       primary workers.
@@ -109,7 +77,9 @@ class BasicAutoscalingAlgorithm(_messages.Message):
   r"""Basic algorithm for autoscaling.
 
   Fields:
-    cooldownPeriod: Required. Cooldown time in between scaling.
+    cooldownPeriod: Optional. Duration between scaling events. A scaling
+      period starts after the update operation from the previous event has
+      completed.Bounds: 2m, 1d. Default: 2m.
     yarnConfig: Required. YARN autoscaling configuration.
   """
 
@@ -121,21 +91,35 @@ class BasicYarnAutoscalingConfig(_messages.Message):
   r"""Basic autoscaling configurations for YARN.
 
   Fields:
-    gracefulDecommissionTimeout: Optional. Timeout used during an autoscaling
-      event (cluster update) between 0 seconds (no graceful decommission) and
-      1 day.Default: 0s.
-    scaleDownFactor: Optional. Fraction of suggested decrease in workers to
-      scale down by between 0 and 1. Suggested decrease when scaling down is
-      determined by the amount of average available memory since the last
-      cooldown period.Default: 1.0.
-    scaleDownMinWorkerFraction: Optional. Minimum workers as a fraction of the
-      current cluster size to to scale down by between 0 and 1.Default: 0.0.
-    scaleUpFactor: Required. Fraction of suggested increase in workers to
-      scale up by between 0 and 1. Suggested increase when scaling up is
-      determined by the amount of average pending memory since the last
-      cooldown period.
-    scaleUpMinWorkerFraction: Optional. Minimum workers as a fraction of the
-      current cluster size to to scale up by between 0 and 1.Default: 0.0.
+    gracefulDecommissionTimeout: Required. Timeout for YARN graceful
+      decommissioning of Node Managers. Specifies the duration to wait for
+      jobs to complete before forcefully removing workers (and potentially
+      interrupting jobs). Only applicable to downscaling operations.Bounds:
+      0s, 1d.
+    scaleDownFactor: Required. Fraction of average pending memory in the last
+      cooldown period for which to remove workers. A scale-down factor of 1
+      will result in scaling down so that there is no available memory
+      remaining after the update (more aggressive scaling). A scale-down
+      factor of 0 disables removing workers, which can be beneficial for
+      autoscaling a single job.Bounds: 0.0, 1.0.
+    scaleDownMinWorkerFraction: Optional. Minimum scale-down threshold as a
+      fraction of total cluster size before scaling occurs. For example, in a
+      20-worker cluster, a threshold of 0.1 means the autoscaler must
+      recommend at least a 2 worker scale-down for the cluster to scale. A
+      threshold of 0 means the autoscaler will scale down on any recommended
+      change.Bounds: 0.0, 1.0. Default: 0.0.
+    scaleUpFactor: Required. Fraction of average pending memory in the last
+      cooldown period for which to add workers. A scale-up factor of 1.0 will
+      result in scaling up so that there is no pending memory remaining after
+      the update (more aggressive scaling). A scale-up factor closer to 0 will
+      result in a smaller magnitude of scaling up (less aggressive
+      scaling).Bounds: 0.0, 1.0.
+    scaleUpMinWorkerFraction: Optional. Minimum scale-up threshold as a
+      fraction of total cluster size before scaling occurs. For example, in a
+      20-worker cluster, a threshold of 0.1 means the autoscaler must
+      recommend at least a 2-worker scale-up for the cluster to scale. A
+      threshold of 0 means the autoscaler will scale up on any recommended
+      change.Bounds: 0.0, 1.0. Default: 0.0.
   """
 
   gracefulDecommissionTimeout = _messages.StringField(1)
@@ -149,10 +133,10 @@ class Binding(_messages.Message):
   r"""Associates members with a role.
 
   Fields:
-    condition: Unimplemented. The condition that is associated with this
-      binding. NOTE: an unsatisfied condition will not allow user access via
-      current binding. Different bindings, including their conditions, are
-      examined independently.
+    condition: The condition that is associated with this binding. NOTE: An
+      unsatisfied condition will not allow user access via current binding.
+      Different bindings, including their conditions, are examined
+      independently.
     members: Specifies the identities requesting access for a Cloud Platform
       resource. members can have the following values: allUsers: A special
       identifier that represents anyone who is  on the internet; with or
@@ -163,9 +147,9 @@ class Binding(_messages.Message):
       serviceAccount:{emailid}: An email address that represents a service
       account. For example, my-other-app@appspot.gserviceaccount.com.
       group:{emailid}: An email address that represents a Google group.  For
-      example, admins@example.com. domain:{domain}: A Google Apps domain name
-      that represents all the  users of that domain. For example, google.com
-      or example.com.
+      example, admins@example.com. domain:{domain}: The G Suite domain
+      (primary) that represents all the  users of that domain. For example,
+      google.com or example.com.
     role: Role that is assigned to members. For example, roles/viewer,
       roles/editor, or roles/owner.
   """
@@ -258,15 +242,16 @@ class ClusterConfig(_messages.Message):
   Fields:
     autoscalingConfig: Optional. Autoscaling config for the policy associated
       with the cluster. Cluster does not autoscale if this field is unset.
-    configBucket: Optional. A Cloud Storage staging bucket used for sharing
-      generated SSH keys and config. If you do not specify a staging bucket,
-      Cloud Dataproc will determine an appropriate Cloud Storage location (US,
-      ASIA, or EU) for your cluster's staging bucket according to the Google
-      Compute Engine zone where your cluster is deployed, and then it will
-      create and manage this project-level, per-location bucket for you.
+    configBucket: Optional. A Google Cloud Storage bucket used to stage job
+      dependencies, config files, and job driver console output. If you do not
+      specify a staging bucket, Cloud Dataproc will determine a Cloud Storage
+      location (US, ASIA, or EU) for your cluster's staging bucket according
+      to the Google Compute Engine zone where your cluster is deployed, and
+      then create and manage this project-level, per-location bucket (see
+      Cloud Dataproc staging bucket).
     encryptionConfig: Optional. Encryption settings for the cluster.
     endpointConfig: Optional. Port/endpoint configuration for this cluster
-    gceClusterConfig: Required. The shared Compute Engine config settings for
+    gceClusterConfig: Optional. The shared Compute Engine config settings for
       all instances in a cluster.
     initializationActions: Optional. Commands to execute on each node after
       config is completed. By default, executables are run on master and all
@@ -603,6 +588,19 @@ class DataprocProjectsLocationsAutoscalingPoliciesDeleteRequest(_messages.Messag
   name = _messages.StringField(1, required=True)
 
 
+class DataprocProjectsLocationsAutoscalingPoliciesGetIamPolicyRequest(_messages.Message):
+  r"""A DataprocProjectsLocationsAutoscalingPoliciesGetIamPolicyRequest
+  object.
+
+  Fields:
+    resource: REQUIRED: The resource for which the policy is being requested.
+      See the operation documentation for the appropriate value for this
+      field.
+  """
+
+  resource = _messages.StringField(1, required=True)
+
+
 class DataprocProjectsLocationsAutoscalingPoliciesGetRequest(_messages.Message):
   r"""A DataprocProjectsLocationsAutoscalingPoliciesGetRequest object.
 
@@ -632,6 +630,38 @@ class DataprocProjectsLocationsAutoscalingPoliciesListRequest(_messages.Message)
   pageSize = _messages.IntegerField(1, variant=_messages.Variant.INT32)
   pageToken = _messages.StringField(2)
   parent = _messages.StringField(3, required=True)
+
+
+class DataprocProjectsLocationsAutoscalingPoliciesSetIamPolicyRequest(_messages.Message):
+  r"""A DataprocProjectsLocationsAutoscalingPoliciesSetIamPolicyRequest
+  object.
+
+  Fields:
+    resource: REQUIRED: The resource for which the policy is being specified.
+      See the operation documentation for the appropriate value for this
+      field.
+    setIamPolicyRequest: A SetIamPolicyRequest resource to be passed as the
+      request body.
+  """
+
+  resource = _messages.StringField(1, required=True)
+  setIamPolicyRequest = _messages.MessageField('SetIamPolicyRequest', 2)
+
+
+class DataprocProjectsLocationsAutoscalingPoliciesTestIamPermissionsRequest(_messages.Message):
+  r"""A DataprocProjectsLocationsAutoscalingPoliciesTestIamPermissionsRequest
+  object.
+
+  Fields:
+    resource: REQUIRED: The resource for which the policy detail is being
+      requested. See the operation documentation for the appropriate value for
+      this field.
+    testIamPermissionsRequest: A TestIamPermissionsRequest resource to be
+      passed as the request body.
+  """
+
+  resource = _messages.StringField(1, required=True)
+  testIamPermissionsRequest = _messages.MessageField('TestIamPermissionsRequest', 2)
 
 
 class DataprocProjectsLocationsWorkflowTemplatesCreateRequest(_messages.Message):
@@ -811,6 +841,21 @@ class DataprocProjectsRegionsAutoscalingPoliciesDeleteRequest(_messages.Message)
   name = _messages.StringField(1, required=True)
 
 
+class DataprocProjectsRegionsAutoscalingPoliciesGetIamPolicyRequest(_messages.Message):
+  r"""A DataprocProjectsRegionsAutoscalingPoliciesGetIamPolicyRequest object.
+
+  Fields:
+    getIamPolicyRequest: A GetIamPolicyRequest resource to be passed as the
+      request body.
+    resource: REQUIRED: The resource for which the policy is being requested.
+      See the operation documentation for the appropriate value for this
+      field.
+  """
+
+  getIamPolicyRequest = _messages.MessageField('GetIamPolicyRequest', 1)
+  resource = _messages.StringField(2, required=True)
+
+
 class DataprocProjectsRegionsAutoscalingPoliciesGetRequest(_messages.Message):
   r"""A DataprocProjectsRegionsAutoscalingPoliciesGetRequest object.
 
@@ -840,6 +885,37 @@ class DataprocProjectsRegionsAutoscalingPoliciesListRequest(_messages.Message):
   pageSize = _messages.IntegerField(1, variant=_messages.Variant.INT32)
   pageToken = _messages.StringField(2)
   parent = _messages.StringField(3, required=True)
+
+
+class DataprocProjectsRegionsAutoscalingPoliciesSetIamPolicyRequest(_messages.Message):
+  r"""A DataprocProjectsRegionsAutoscalingPoliciesSetIamPolicyRequest object.
+
+  Fields:
+    resource: REQUIRED: The resource for which the policy is being specified.
+      See the operation documentation for the appropriate value for this
+      field.
+    setIamPolicyRequest: A SetIamPolicyRequest resource to be passed as the
+      request body.
+  """
+
+  resource = _messages.StringField(1, required=True)
+  setIamPolicyRequest = _messages.MessageField('SetIamPolicyRequest', 2)
+
+
+class DataprocProjectsRegionsAutoscalingPoliciesTestIamPermissionsRequest(_messages.Message):
+  r"""A DataprocProjectsRegionsAutoscalingPoliciesTestIamPermissionsRequest
+  object.
+
+  Fields:
+    resource: REQUIRED: The resource for which the policy detail is being
+      requested. See the operation documentation for the appropriate value for
+      this field.
+    testIamPermissionsRequest: A TestIamPermissionsRequest resource to be
+      passed as the request body.
+  """
+
+  resource = _messages.StringField(1, required=True)
+  testIamPermissionsRequest = _messages.MessageField('TestIamPermissionsRequest', 2)
 
 
 class DataprocProjectsRegionsClustersCreateRequest(_messages.Message):
@@ -1628,7 +1704,6 @@ class GceClusterConfig(_messages.Message):
       metadata#project_and_instance_metadata)).
 
   Fields:
-    allocationAffinity: Allocation Affinity for consuming Zonal allocation.
     internalIpOnly: Optional. If true, all instances in the cluster will only
       have internal IP addresses. By default, clusters are not restricted to
       internal IP addresses, and will have ephemeral external IP addresses
@@ -1647,6 +1722,8 @@ class GceClusterConfig(_messages.Message):
       short name are valid. Examples: https://www.googleapis.com/compute/v1/pr
       ojects/[project_id]/regions/global/default
       projects/[project_id]/regions/global/default default
+    reservationAffinity: Optional. Reservation Affinity for consuming Zonal
+      reservation.
     serviceAccount: Optional. The service account of the instances. Defaults
       to the default Compute Engine service account. Custom service accounts
       need permissions equivalent to the following IAM roles:
@@ -1669,7 +1746,8 @@ class GceClusterConfig(_messages.Message):
       machine communications. Cannot be specified with network_uri.A full URL,
       partial URI, or short name are valid. Examples:
       https://www.googleapis.com/compute/v1/projects/[project_id]/regions/us-
-      east1/sub0 projects/[project_id]/regions/us-east1/sub0 sub0
+      east1/subnetworks/sub0 projects/[project_id]/regions/us-
+      east1/subnetworks/sub0 sub0
     tags: The Compute Engine tags to add to all instances (see Tagging
       instances).
     zoneUri: Optional. The zone where the Compute Engine cluster will be
@@ -1708,10 +1786,10 @@ class GceClusterConfig(_messages.Message):
 
     additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
 
-  allocationAffinity = _messages.MessageField('AllocationAffinity', 1)
-  internalIpOnly = _messages.BooleanField(2)
-  metadata = _messages.MessageField('MetadataValue', 3)
-  networkUri = _messages.StringField(4)
+  internalIpOnly = _messages.BooleanField(1)
+  metadata = _messages.MessageField('MetadataValue', 2)
+  networkUri = _messages.StringField(3)
+  reservationAffinity = _messages.MessageField('ReservationAffinity', 4)
   serviceAccount = _messages.StringField(5)
   serviceAccountScopes = _messages.StringField(6, repeated=True)
   subnetworkUri = _messages.StringField(7)
@@ -1898,19 +1976,29 @@ class InstanceGroupAutoscalingPolicyConfig(_messages.Message):
   proportional size to other groups.
 
   Fields:
-    maxInstances: Required. Maximum number of instances for this group. Must
-      be >= min_instances.
-    minInstances: Optional. Minimum number of instances for this group.Default
-      for primary workers is 2, default for secondary workers is 0.
-    weight: Optional. Weight for instance group. Determines fraction of total
-      workers in cluster that will be composed of instances from this instance
-      group (e.g. if primary workers have weight 2 and secondary workers have
-      weight 1, then the cluster should have approximately 2 primary workers
-      to each secondary worker. Cluster may not reach these exact weights if
-      constrained by min/max bounds or other autoscaling
-      configurations.Default 1. Note that all groups have equal an equal
-      weight by default, so the cluster will attempt to maintain an equal
-      number of workers in each group within configured size bounds per group.
+    maxInstances: Optional. Maximum number of instances for this group.
+      Required for primary workers. Note that by default, clusters will not
+      use secondary workers. Required for secondary workers if the minimum
+      secondary instances is set.Primary workers - Bounds: [min_instances, ).
+      Required. Secondary workers - Bounds: [min_instances, ). Default: 0.
+    minInstances: Optional. Minimum number of instances for this group.Primary
+      workers - Bounds: 2, max_instances. Default: 2. Secondary workers -
+      Bounds: 0, max_instances. Default: 0.
+    weight: Optional. Weight for the instance group, which is used to
+      determine the fraction of total workers in the cluster from this
+      instance group. For example, if primary workers have weight 2, and
+      secondary workers have weight 1, the cluster will have approximately 2
+      primary workers for each secondary worker.The cluster may not reach the
+      specified balance if constrained by min/max bounds or other autoscaling
+      settings. For example, if max_instances for secondary workers is 0, then
+      only primary workers will be added. The cluster can also be out of
+      balance when created.If weight is not set on any instance group, the
+      cluster will default to equal weight for all groups: the cluster will
+      attempt to maintain an equal number of workers in each group within the
+      configured size bounds for each group. If weight is set for one group
+      only, the cluster will default to zero weight on the unset group. For
+      example if weight is set only on primary workers, the cluster will use
+      primary workers only and no secondary workers.
   """
 
   maxInstances = _messages.IntegerField(1, variant=_messages.Variant.INT32)
@@ -2250,34 +2338,35 @@ class KerberosConfig(_messages.Message):
       trusted realm in a cross realm trust relationship.
     crossRealmTrustRealm: Optional. The remote realm the Dataproc on-cluster
       KDC will trust, should the user enable cross realm trust.
-    crossRealmTrustSharedPasswordUri: Optional. The GCS uri of a KMS encrypted
-      file containing the shared password between the on-cluster Kerberos
-      realm and the remote trusted realm, in a cross realm trust relationship.
+    crossRealmTrustSharedPasswordUri: Optional. The Cloud Storage URI of a KMS
+      encrypted file containing the shared password between the on-cluster
+      Kerberos realm and the remote trusted realm, in a cross realm trust
+      relationship.
     enableKerberos: Optional. Flag to indicate whether to Kerberize the
       cluster.
-    kdcDbKeyUri: Optional. The GCS uri of a KMS encrypted file containing the
-      master key of the KDC database.
-    keyPasswordUri: Optional. The GCS uri of a KMS encrypted file containing
-      the password to the user provided key. For the self-signed certificate,
-      this password is generated by Dataproc.
-    keystorePasswordUri: Optional. The GCS uri of a KMS encrypted file
-      containing the password to the user provided keystore. For the self-
-      signed certificate, this password is generated by Dataproc.
-    keystoreUri: Optional. The GCS uri of the keystore file used for SSL
-      encryption. If not provided, Dataproc will provide a self-signed
+    kdcDbKeyUri: Optional. The Cloud Storage URI of a KMS encrypted file
+      containing the master key of the KDC database.
+    keyPasswordUri: Optional. The Cloud Storage URI of a KMS encrypted file
+      containing the password to the user provided key. For the self-signed
+      certificate, this password is generated by Dataproc.
+    keystorePasswordUri: Optional. The Cloud Storage URI of a KMS encrypted
+      file containing the password to the user provided keystore. For the
+      self-signed certificate, this password is generated by Dataproc.
+    keystoreUri: Optional. The Cloud Storage URI of the keystore file used for
+      SSL encryption. If not provided, Dataproc will provide a self-signed
       certificate.
     kmsKeyUri: Required. The uri of the KMS key used to encrypt various
       sensitive files.
-    rootPrincipalPasswordUri: Required. The GCS uri of a KMS encrypted file
-      containing the root principal password.
+    rootPrincipalPasswordUri: Required. The Cloud Storage URI of a KMS
+      encrypted file containing the root principal password.
     tgtLifetimeHours: Optional. The lifetime of the ticket granting ticket, in
       hours. If not specified, or user specifies 0, then default value 10 will
       be used.
-    truststorePasswordUri: Optional. The GCS uri of a KMS encrypted file
-      containing the password to the user provided truststore. For the self-
-      signed certificate, this password is generated by Dataproc.
-    truststoreUri: Optional. The GCS uri of the truststore file used for SSL
-      encryption. If not provided, Dataproc will provide a self-signed
+    truststorePasswordUri: Optional. The Cloud Storage URI of a KMS encrypted
+      file containing the password to the user provided truststore. For the
+      self-signed certificate, this password is generated by Dataproc.
+    truststoreUri: Optional. The Cloud Storage URI of the truststore file used
+      for SSL encryption. If not provided, Dataproc will provide a self-signed
       certificate.
   """
 
@@ -3037,6 +3126,39 @@ class RegexValidation(_messages.Message):
   regexes = _messages.StringField(1, repeated=True)
 
 
+class ReservationAffinity(_messages.Message):
+  r"""Reservation Affinity for consuming Zonal reservation.
+
+  Enums:
+    ConsumeReservationTypeValueValuesEnum: Optional. Type of reservation to
+      consume
+
+  Fields:
+    consumeReservationType: Optional. Type of reservation to consume
+    key: Optional. Corresponds to the label key of reservation resource.
+    values: Optional. Corresponds to the label values of reservation resource.
+  """
+
+  class ConsumeReservationTypeValueValuesEnum(_messages.Enum):
+    r"""Optional. Type of reservation to consume
+
+    Values:
+      TYPE_UNSPECIFIED: <no description>
+      NO_RESERVATION: Do not consume from any allocated capacity.
+      ANY_RESERVATION: Consume any reservation available.
+      SPECIFIC_RESERVATION: Must consume from a specific reservation. Must
+        specify key value fields for specifying the reservations.
+    """
+    TYPE_UNSPECIFIED = 0
+    NO_RESERVATION = 1
+    ANY_RESERVATION = 2
+    SPECIFIC_RESERVATION = 3
+
+  consumeReservationType = _messages.EnumField('ConsumeReservationTypeValueValuesEnum', 1)
+  key = _messages.StringField(2)
+  values = _messages.StringField(3, repeated=True)
+
+
 class SecurityConfig(_messages.Message):
   r"""Security related configuration, including encryption, Kerberos, etc.
 
@@ -3068,8 +3190,8 @@ class SoftwareConfig(_messages.Message):
 
   Messages:
     PropertiesValue: Optional. The properties to set on daemon config
-      files.Property keys are specified in prefix:property format, such as
-      core:fs.defaultFS. The following are supported prefixes and their
+      files.Property keys are specified in prefix:property format, for example
+      core:hadoop.tmp.dir. The following are supported prefixes and their
       mappings: capacity-scheduler: capacity-scheduler.xml core: core-site.xml
       distcp: distcp-default.xml hdfs: hdfs-site.xml hive: hive-site.xml
       mapred: mapred-site.xml pig: pig.properties spark: spark-defaults.conf
@@ -3079,12 +3201,12 @@ class SoftwareConfig(_messages.Message):
     imageVersion: Optional. The version of software inside the cluster. It
       must be one of the supported Cloud Dataproc Versions, such as "1.2"
       (including a subminor version, such as "1.2.29"), or the "preview"
-      version. If unspecified, it defaults to the latest version.
+      version. If unspecified, it defaults to the latest Debian version.
     optionalComponents: The set of optional components to activate on the
       cluster.
     properties: Optional. The properties to set on daemon config
-      files.Property keys are specified in prefix:property format, such as
-      core:fs.defaultFS. The following are supported prefixes and their
+      files.Property keys are specified in prefix:property format, for example
+      core:hadoop.tmp.dir. The following are supported prefixes and their
       mappings: capacity-scheduler: capacity-scheduler.xml core: core-site.xml
       distcp: distcp-default.xml hdfs: hdfs-site.xml hive: hive-site.xml
       mapred: mapred-site.xml pig: pig.properties spark: spark-defaults.conf
@@ -3097,29 +3219,33 @@ class SoftwareConfig(_messages.Message):
     Values:
       COMPONENT_UNSPECIFIED: <no description>
       ANACONDA: <no description>
+      DRUID: <no description>
       HIVE_WEBHCAT: <no description>
       JUPYTER: <no description>
       KERBEROS: <no description>
       PRESTO: <no description>
       ZEPPELIN: <no description>
+      ZOOKEEPER: <no description>
     """
     COMPONENT_UNSPECIFIED = 0
     ANACONDA = 1
-    HIVE_WEBHCAT = 2
-    JUPYTER = 3
-    KERBEROS = 4
-    PRESTO = 5
-    ZEPPELIN = 6
+    DRUID = 2
+    HIVE_WEBHCAT = 3
+    JUPYTER = 4
+    KERBEROS = 5
+    PRESTO = 6
+    ZEPPELIN = 7
+    ZOOKEEPER = 8
 
   @encoding.MapUnrecognizedFields('additionalProperties')
   class PropertiesValue(_messages.Message):
     r"""Optional. The properties to set on daemon config files.Property keys
-    are specified in prefix:property format, such as core:fs.defaultFS. The
-    following are supported prefixes and their mappings: capacity-scheduler:
-    capacity-scheduler.xml core: core-site.xml distcp: distcp-default.xml
-    hdfs: hdfs-site.xml hive: hive-site.xml mapred: mapred-site.xml pig:
-    pig.properties spark: spark-defaults.conf yarn: yarn-site.xmlFor more
-    information, see Cluster properties.
+    are specified in prefix:property format, for example core:hadoop.tmp.dir.
+    The following are supported prefixes and their mappings: capacity-
+    scheduler: capacity-scheduler.xml core: core-site.xml distcp: distcp-
+    default.xml hdfs: hdfs-site.xml hive: hive-site.xml mapred: mapred-
+    site.xml pig: pig.properties spark: spark-defaults.conf yarn: yarn-
+    site.xmlFor more information, see Cluster properties.
 
     Messages:
       AdditionalProperty: An additional property for a PropertiesValue object.

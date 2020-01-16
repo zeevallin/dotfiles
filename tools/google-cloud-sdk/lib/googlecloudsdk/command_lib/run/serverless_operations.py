@@ -35,13 +35,14 @@ from googlecloudsdk.api_lib.run import metric_names
 from googlecloudsdk.api_lib.run import revision
 from googlecloudsdk.api_lib.run import route
 from googlecloudsdk.api_lib.run import service
+from googlecloudsdk.api_lib.util import apis
 from googlecloudsdk.api_lib.util import apis_internal
 from googlecloudsdk.api_lib.util import exceptions as exceptions_util
 from googlecloudsdk.api_lib.util import waiter
 from googlecloudsdk.command_lib.run import config_changes as config_changes_mod
 from googlecloudsdk.command_lib.run import deployable as deployable_pkg
 from googlecloudsdk.command_lib.run import exceptions as serverless_exceptions
-from googlecloudsdk.command_lib.run import pretty_print
+from googlecloudsdk.command_lib.run import resource_name_conversion
 from googlecloudsdk.command_lib.run import stages
 from googlecloudsdk.core import exceptions
 from googlecloudsdk.core import log
@@ -81,12 +82,59 @@ def Connect(conn_context):
   Yields:
     A ServerlessOperations instance.
   """
+
+  # The One Platform client is required for making requests against
+  # endpoints that do not supported Kubernetes-style resource naming
+  # conventions. The One Platform client must be initialized outside of a
+  # connection context so that it does not pick up the api_endpoint_overrides
+  # values from the connection context.
+  # pylint: disable=protected-access
+  op_client = apis_internal._GetClientInstance(
+      conn_context.api_name,
+      conn_context.api_version,
+      ca_certs=conn_context.ca_certs)
+  # pylint: enable=protected-access
+
   with conn_context as conn_info:
+    # pylint: disable=protected-access
+    client = apis_internal._GetClientInstance(
+        conn_info.api_name,
+        conn_info.api_version,
+        # Only check response if not connecting to GKE
+        check_response_func=apis.CheckResponseForApiEnablement
+        if conn_context.supports_one_platform else None,
+        ca_certs=conn_info.ca_certs)
+    # pylint: enable=protected-access
     yield ServerlessOperations(
-        apis_internal._GetClientInstance(  # pylint: disable=protected-access
-            conn_info.api_name, conn_info.api_version,
-            ca_certs=conn_info.ca_certs),
-        conn_info.api_name, conn_info.api_version)
+        client,
+        conn_info.api_name,
+        conn_info.api_version,
+        conn_info.region,
+        op_client)
+
+
+class DomainMappingResourceRecordPoller(waiter.OperationPoller):
+  """Poll for when a DomainMapping first has resourceRecords."""
+
+  def __init__(self, ops):
+    self._ops = ops
+
+  def IsDone(self, mapping):
+    if getattr(mapping.status, 'resourceRecords', None):
+      return True
+    conditions = mapping.conditions
+    # pylint: disable=g-bool-id-comparison
+    # False (indicating failure) as distinct from None (indicating not sure yet)
+    if conditions and conditions['Ready']['status'] is False:
+      return True
+    # pylint: enable=g-bool-id-comparison
+    return False
+
+  def GetResult(self, mapping):
+    return mapping
+
+  def Poll(self, domain_mapping_ref):
+    return self._ops.GetDomainMapping(domain_mapping_ref)
 
 
 class ConditionPoller(waiter.OperationPoller):
@@ -307,14 +355,6 @@ class ServiceConditionPoller(ConditionPoller):
     self._resource_fail_type = serverless_exceptions.DeploymentFailedError
 
 
-class DomainMappingConditionPoller(ConditionPoller):
-
-  def __init__(self, getter, tracker):
-    super(DomainMappingConditionPoller, self).__init__(
-        getter, tracker, stages.DomainMappingDependencies())
-    self._resource_fail_type = serverless_exceptions.DomainMappingCreationError
-
-
 def _Nonce():
   """Return a random string with unlikely collision to use as a nonce."""
   return ''.join(
@@ -379,11 +419,24 @@ class ServerlessOperations(object):
   """Client used by Serverless to communicate with the actual Serverless API.
   """
 
-  def __init__(self, client, api_name, api_version):
+  def __init__(self, client, api_name, api_version, region, op_client):
+    """Inits ServerlessOperations with given API clients.
+
+    Args:
+      client: The API client for interacting with Kubernetes Cloud Run APIs.
+      api_name: str, The name of the Cloud Run API.
+      api_version: str, The version of the Cloud Run API.
+      region: str, The region of the control plane if operating against
+        hosted Cloud Run, else None.
+      op_client: The API client for interacting with One Platform APIs. Or
+        None if interacting with Cloud Run on GKE.
+    """
     self._client = client
     self._registry = resources.REGISTRY.Clone()
     self._registry.RegisterApiByName(api_name, api_version)
     self._temporary_build_template_registry = {}
+    self._op_client = op_client
+    self._region = region
 
   @property
   def _messages_module(self):
@@ -852,8 +905,6 @@ class ServerlessOperations(object):
         new_serv = service.Service.New(self._client, service_ref.namespacesId,
                                        private_endpoint)
         new_serv.name = service_ref.servicesId
-        pretty_print.Info('Creating new service [{bold}{service}{reset}]',
-                          service=new_serv.name)
         parent = service_ref.Parent().RelativeName()
         for config_change in config_changes:
           config_change.AdjustConfiguration(new_serv.configuration,
@@ -882,7 +933,8 @@ class ServerlessOperations(object):
           'region and retry. Ex: `gcloud config set run/region us-central1`')
 
   def ReleaseService(self, service_ref, config_changes, tracker=None,
-                     asyn=False, private_endpoint=None):
+                     asyn=False, private_endpoint=None,
+                     allow_unauthenticated=False):
     """Change the given service in prod using the given config_changes.
 
     Ensures a new revision is always created, even if the spec of the revision
@@ -893,15 +945,38 @@ class ServerlessOperations(object):
       config_changes: list, objects that implement AdjustConfiguration().
       tracker: StagedProgressTracker, to report on the progress of releasing.
       asyn: bool, if True, release asyncronously
-      private_endpoint:
+      private_endpoint: bool, True if creating a new Service for
+        Cloud Run on GKE that should only be addressable from within the
+        cluster. False if it should be publicly addressable. None if
+        its existing visibility should remain unchanged.
+      allow_unauthenticated: bool, True if creating a hosted Cloud Run
+        service which should also have its IAM policy set to allow
+        unauthenticated access.
     """
     if tracker is None:
       tracker = progress_tracker.NoOpStagedProgressTracker(
-          stages.ServiceStages(), interruptable=True, aborted_message='aborted')
+          stages.ServiceStages(allow_unauthenticated),
+          interruptable=True, aborted_message='aborted')
     with_code = any(
         isinstance(c, deployable_pkg.Deployable) for c in config_changes)
     self._UpdateOrCreateService(
         service_ref, config_changes, with_code, private_endpoint)
+
+    if allow_unauthenticated:
+      try:
+        tracker.StartStage(stages.SERVICE_IAM_POLICY_SET)
+        tracker.UpdateStage(stages.SERVICE_IAM_POLICY_SET, '')
+        self.AddIamPolicyBinding(service_ref, ['allUsers'], 'roles/run.invoker')
+        tracker.CompleteStage(stages.SERVICE_IAM_POLICY_SET)
+      except api_exceptions.HttpError:
+        warning_message = (
+            'Setting IAM policy failed, try "gcloud beta run services '
+            'add-iam-policy-binding --region=%s --member=allUsers '
+            '--role=roles/run.invoker %s"') % (
+                self._region, service_ref.servicesId)
+        tracker.CompleteStageWithWarning(
+            stages.SERVICE_IAM_POLICY_SET, warning_message=warning_message)
+
     if not asyn:
       getter = functools.partial(self.GetService, service_ref)
       self.WaitForCondition(ServiceConditionPoller(getter, tracker))
@@ -956,6 +1031,7 @@ class ServerlessOperations(object):
     Returns:
       A domain_mapping.DomainMapping object.
     """
+
     messages = self._messages_module
     new_mapping = domain_mapping.DomainMapping.New(
         self._client, domain_mapping_ref.namespacesId)
@@ -967,14 +1043,22 @@ class ServerlessOperations(object):
         parent=domain_mapping_ref.Parent().RelativeName())
     with metrics.RecordDuration(metric_names.CREATE_DOMAIN_MAPPING):
       response = self._client.namespaces_domainmappings.Create(request)
+      # 'run domain-mappings create' is synchronous. Poll for its completion.
+      with progress_tracker.ProgressTracker('Creating...'):
+        mapping = waiter.PollUntilDone(
+            DomainMappingResourceRecordPoller(self), domain_mapping_ref)
+      ready = mapping.conditions.get('Ready')
+      records = getattr(mapping.status, 'resourceRecords', None)
+      message = None
+      if ready and ready.get('message'):
+        message = ready['message']
+      if not records:
+        raise serverless_exceptions.DomainMappingCreationError(
+            message or 'Could not create domain mapping.')
+      if message:
+        log.status.Print(message)
+      return records
 
-    # 'run domain-mappings create' is synchronous. Poll for its completion.
-    getter = functools.partial(self.GetDomainMapping, domain_mapping_ref)
-    with progress_tracker.StagedProgressTracker(
-        'Creating...',
-        stages.DomainMappingStages(),
-        failure_message='Domain mapping failed') as tracker:
-      self.WaitForCondition(DomainMappingConditionPoller(getter, tracker))
     return domain_mapping.DomainMapping(response, messages)
 
   def DeleteDomainMapping(self, domain_mapping_ref):
@@ -1005,3 +1089,46 @@ class ServerlessOperations(object):
     with metrics.RecordDuration(metric_names.GET_DOMAIN_MAPPING):
       response = self._client.namespaces_domainmappings.Get(request)
     return domain_mapping.DomainMapping(response, messages)
+
+  def _GetIamPolicy(self, service_name):
+    """Gets the IAM policy for the service."""
+    messages = self._messages_module
+    request = messages.RunProjectsLocationsServicesGetIamPolicyRequest(
+        resource=str(service_name))
+    response = self._op_client.projects_locations_services.GetIamPolicy(request)
+    return response
+
+  def AddIamPolicyBinding(self, service_ref, members=None, role=None):
+    """Add the given IAM policy binding to the provided service.
+
+    If no members or role are provided, set the IAM policy to the current IAM
+    policy. This is useful for checking whether the authenticated user has
+    the appropriate permissions for setting policies.
+
+    Args:
+      service_ref: str, The service to which to add the IAM policy.
+      members: [str], The users for which the binding applies.
+      role: str, The role to grant the provided members.
+
+    Returns:
+      A google.iam.v1.TestIamPermissionsResponse.
+    """
+    messages = self._messages_module
+    oneplatform_service = resource_name_conversion.K8sToOnePlatform(
+        service_ref, self._region)
+    policy = self._GetIamPolicy(oneplatform_service)
+    if members and role:
+      policy.bindings.append(
+          messages.Binding(members=members, role=role))
+    request = messages.RunProjectsLocationsServicesSetIamPolicyRequest(
+        resource=str(oneplatform_service),
+        setIamPolicyRequest=messages.SetIamPolicyRequest(policy=policy))
+    result = self._op_client.projects_locations_services.SetIamPolicy(request)
+    return result
+
+  def CanAddIamPolicyBinding(self, service_ref):
+    try:
+      self.AddIamPolicyBinding(service_ref)
+      return True
+    except api_exceptions.HttpError:
+      return False

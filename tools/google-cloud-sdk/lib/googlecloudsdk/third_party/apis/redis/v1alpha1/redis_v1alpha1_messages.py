@@ -60,7 +60,9 @@ class Instance(_messages.Message):
     LabelsValue: Resource labels to represent user provided metadata
     RedisConfigsValue: Optional. Redis configuration parameters, according to
       http://redis.io/topics/config. Currently, the only supported parameters
-      are:  * maxmemory-policy  * notify-keyspace-events
+      are:   Redis 3.2 and above:   *   maxmemory-policy  *   notify-keyspace-
+      events   Redis 4.0 and above:   *   activedefrag  *   lfu-log-factor  *
+      lfu-decay-time
 
   Fields:
     alternativeLocationId: Optional. Only applicable to standard tier which
@@ -97,19 +99,17 @@ class Instance(_messages.Message):
       which specific zone (or collection of zones for cross zone instances) an
       instance should be provisioned in. Refer to [location_id] and
       [alternative_location_id] fields for more details.
-    persistenceIamIdentity: Output only. IAM identity used by import / export
-      operations to transfer data to/from GCS.  Format is
-      "serviceAccount:<service_account_email>".  The value may change over
-      time for a given instance so should be checked before each import/export
-      operation.
     port: Output only. The port number of the exposed redis endpoint.
     redisConfigs: Optional. Redis configuration parameters, according to
       http://redis.io/topics/config. Currently, the only supported parameters
-      are:  * maxmemory-policy  * notify-keyspace-events
+      are:   Redis 3.2 and above:   *   maxmemory-policy  *   notify-keyspace-
+      events   Redis 4.0 and above:   *   activedefrag  *   lfu-log-factor  *
+      lfu-decay-time
     redisVersion: Optional. The version of Redis software. If not provided,
       latest supported version will be used. Updating the version will perform
       an upgrade/downgrade to the new version. Currently, the supported values
-      are `REDIS_3_2` for Redis 3.2.
+      are:   *   `REDIS_4_0` for Redis 4.0 compatibility  *   `REDIS_3_2` for
+      Redis 3.2 compatibility (default)
     reservedIpRange: Optional. The CIDR range of internal addresses that are
       reserved for this instance. If not provided, the service will choose an
       unused /29 block, for example, 10.0.0.0/29 or 192.168.0.0/29. Ranges
@@ -137,6 +137,8 @@ class Instance(_messages.Message):
         instance.
       IMPORTING: Redis instance is importing data (availability may be
         affected).
+      FAILING_OVER: Redis instance is failing over (availability may be
+        affected).
     """
     STATE_UNSPECIFIED = 0
     CREATING = 1
@@ -146,6 +148,7 @@ class Instance(_messages.Message):
     REPAIRING = 5
     PERFORMING_MAINTENANCE = 6
     IMPORTING = 7
+    FAILING_OVER = 8
 
   class TierValueValuesEnum(_messages.Enum):
     r"""Required. The service tier of the instance.
@@ -188,7 +191,9 @@ class Instance(_messages.Message):
   class RedisConfigsValue(_messages.Message):
     r"""Optional. Redis configuration parameters, according to
     http://redis.io/topics/config. Currently, the only supported parameters
-    are:  * maxmemory-policy  * notify-keyspace-events
+    are:   Redis 3.2 and above:   *   maxmemory-policy  *   notify-keyspace-
+    events   Redis 4.0 and above:   *   activedefrag  *   lfu-log-factor  *
+    lfu-decay-time
 
     Messages:
       AdditionalProperty: An additional property for a RedisConfigsValue
@@ -221,14 +226,13 @@ class Instance(_messages.Message):
   locationId = _messages.StringField(8)
   memorySizeGb = _messages.IntegerField(9, variant=_messages.Variant.INT32)
   name = _messages.StringField(10)
-  persistenceIamIdentity = _messages.StringField(11)
-  port = _messages.IntegerField(12, variant=_messages.Variant.INT32)
-  redisConfigs = _messages.MessageField('RedisConfigsValue', 13)
-  redisVersion = _messages.StringField(14)
-  reservedIpRange = _messages.StringField(15)
-  state = _messages.EnumField('StateValueValuesEnum', 16)
-  statusMessage = _messages.StringField(17)
-  tier = _messages.EnumField('TierValueValuesEnum', 18)
+  port = _messages.IntegerField(11, variant=_messages.Variant.INT32)
+  redisConfigs = _messages.MessageField('RedisConfigsValue', 12)
+  redisVersion = _messages.StringField(13)
+  reservedIpRange = _messages.StringField(14)
+  state = _messages.EnumField('StateValueValuesEnum', 15)
+  statusMessage = _messages.StringField(16)
+  tier = _messages.EnumField('TierValueValuesEnum', 17)
 
 
 class ListInstancesResponse(_messages.Message):
@@ -557,7 +561,7 @@ class RedisProjectsLocationsInstancesCreateRequest(_messages.Message):
       Must be unique within the customer project / location
     parent: Required. The resource name of the instance location using the
       form:     `projects/{project_id}/locations/{location_id}` where
-      `location_id` refers to a GCP region
+      `location_id` refers to a GCP region.
   """
 
   instance = _messages.MessageField('Instance', 1)
@@ -571,7 +575,7 @@ class RedisProjectsLocationsInstancesDeleteRequest(_messages.Message):
   Fields:
     name: Required. Redis instance resource name using the form:
       `projects/{project_id}/locations/{location_id}/instances/{instance_id}`
-      where `location_id` refers to a GCP region
+      where `location_id` refers to a GCP region.
   """
 
   name = _messages.StringField(1, required=True)
@@ -583,7 +587,7 @@ class RedisProjectsLocationsInstancesGetRequest(_messages.Message):
   Fields:
     name: Required. Redis instance resource name using the form:
       `projects/{project_id}/locations/{location_id}/instances/{instance_id}`
-      where `location_id` refers to a GCP region
+      where `location_id` refers to a GCP region.
   """
 
   name = _messages.StringField(1, required=True)
@@ -602,7 +606,7 @@ class RedisProjectsLocationsInstancesListRequest(_messages.Message):
       request, if any.
     parent: Required. The resource name of the instance location using the
       form:     `projects/{project_id}/locations/{location_id}` where
-      `location_id` refers to a GCP region
+      `location_id` refers to a GCP region.
   """
 
   pageSize = _messages.IntegerField(1, variant=_messages.Variant.INT32)

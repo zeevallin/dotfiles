@@ -99,12 +99,13 @@ class Configuration(k8s_object.KubernetesObject):
                 limits_cls.AdditionalProperty(
                     key=item.key,
                     value=item.value.string))
-          self.container.resources.limitsInMap = None
-
-      return
     else:
       self.container.resources = k8s_object.InitializedInstance(
           self._messages.ResourceRequirements)
+    # These fields are in the schema due to an error in interperetation of the
+    # Knative spec. We're removing them, so never send any contents for them.
+    self.container.resources.limitsInMap = None
+    self.container.resources.requestsInMap = None
 
   def _EnsureBuild(self):
     if self._m.spec.build:
@@ -134,9 +135,16 @@ class Configuration(k8s_object.KubernetesObject):
     self._EnsureBuild()
     self._m.spec.build.template.name = value
 
+  def _EnsureRevisionMeta(self):
+    revision_meta = self.spec.revisionTemplate.metadata
+    if revision_meta is None:
+      revision_meta = self._messages.ObjectMeta()
+      self.spec.revisionTemplate.metadata = revision_meta
+    return revision_meta
+
   @property
   def revision_labels(self):
-    revision_meta = self.spec.revisionTemplate.metadata
+    revision_meta = self._EnsureRevisionMeta()
     if revision_meta.labels is None:
       revision_meta.labels = self._messages.ObjectMeta.LabelsValue()
     return k8s_object.ListAsDictionaryWrapper(
@@ -148,7 +156,7 @@ class Configuration(k8s_object.KubernetesObject):
 
   @property
   def revision_annotations(self):
-    revision_meta = self.spec.revisionTemplate.metadata
+    revision_meta = revision_meta = self._EnsureRevisionMeta()
     return k8s_object.AnnotationsFromMetadata(self._messages, revision_meta)
 
   @property
@@ -217,6 +225,15 @@ class Configuration(k8s_object.KubernetesObject):
   @timeout.setter
   def timeout(self, value):
     self.spec.revisionTemplate.spec.timeoutSeconds = value
+
+  @property
+  def service_account(self):
+    """The service account in the revisionTemplate."""
+    return self.spec.revisionTemplate.spec.serviceAccountName
+
+  @service_account.setter
+  def service_account(self, value):
+    self.spec.revisionTemplate.spec.serviceAccountName = value
 
   @property
   def build_template_arguments(self):

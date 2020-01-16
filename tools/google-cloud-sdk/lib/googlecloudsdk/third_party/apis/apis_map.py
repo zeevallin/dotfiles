@@ -68,6 +68,12 @@ class APIDef(object):
 
 MAP = {
     'accesscontextmanager': {
+        'v1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.accesscontextmanager.v1',
+            client_classpath='accesscontextmanager_v1_client.AccesscontextmanagerV1',
+            messages_modulepath='accesscontextmanager_v1_messages',
+            default_version=True
+        ),
         'v1alpha': APIDef(
             class_path='googlecloudsdk.third_party.apis.accesscontextmanager.v1alpha',
             client_classpath='accesscontextmanager_v1alpha_client.AccesscontextmanagerV1alpha',
@@ -78,7 +84,7 @@ MAP = {
             class_path='googlecloudsdk.third_party.apis.accesscontextmanager.v1beta',
             client_classpath='accesscontextmanager_v1beta_client.AccesscontextmanagerV1beta',
             messages_modulepath='accesscontextmanager_v1beta_messages',
-            default_version=True
+            default_version=False
         ),
     },
     'appengine': {
@@ -392,6 +398,12 @@ MAP = {
             class_path='googlecloudsdk.third_party.apis.datacatalog.v1alpha3',
             client_classpath='datacatalog_v1alpha3_client.DatacatalogV1alpha3',
             messages_modulepath='datacatalog_v1alpha3_messages',
+            default_version=False
+        ),
+        'v1beta1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.datacatalog.v1beta1',
+            client_classpath='datacatalog_v1beta1_client.DatacatalogV1beta1',
+            messages_modulepath='datacatalog_v1beta1_messages',
             default_version=True
         ),
     },
@@ -451,6 +463,14 @@ MAP = {
             default_version=False
         ),
     },
+    'dialogflow': {
+        'v2': APIDef(
+            class_path='googlecloudsdk.third_party.apis.dialogflow.v2',
+            client_classpath='dialogflow_v2_client.DialogflowV2',
+            messages_modulepath='dialogflow_v2_messages',
+            default_version=True
+        ),
+    },
     'discovery': {
         'v1': APIDef(
             class_path='googlecloudsdk.third_party.apis.discovery.v1',
@@ -481,11 +501,27 @@ MAP = {
             default_version=False
         ),
     },
+    'domains': {
+        'v1alpha1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.domains.v1alpha1',
+            client_classpath='domains_v1alpha1_client.DomainsV1alpha1',
+            messages_modulepath='domains_v1alpha1_messages',
+            default_version=True
+        ),
+    },
     'edge': {
         'v1alpha1': APIDef(
             class_path='googlecloudsdk.third_party.apis.edge.v1alpha1',
             client_classpath='edge_v1alpha1_client.EdgeV1alpha1',
             messages_modulepath='edge_v1alpha1_messages',
+            default_version=True
+        ),
+    },
+    'edgeml': {
+        'v1beta1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.edgeml.v1beta1',
+            client_classpath='edgeml_v1beta1_client.EdgemlV1beta1',
+            messages_modulepath='edgeml_v1beta1_messages',
             default_version=True
         ),
     },
@@ -566,12 +602,6 @@ MAP = {
         ),
     },
     'healthcare': {
-        'v1alpha': APIDef(
-            class_path='googlecloudsdk.third_party.apis.healthcare.v1alpha',
-            client_classpath='healthcare_v1alpha_client.HealthcareV1alpha',
-            messages_modulepath='healthcare_v1alpha_messages',
-            default_version=False
-        ),
         'v1alpha2': APIDef(
             class_path='googlecloudsdk.third_party.apis.healthcare.v1alpha2',
             client_classpath='healthcare_v1alpha2_client.HealthcareV1alpha2',
@@ -641,6 +671,14 @@ MAP = {
             default_version=True
         ),
     },
+    'osconfig': {
+        'v1alpha1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.osconfig.v1alpha1',
+            client_classpath='osconfig_v1alpha1_client.OsconfigV1alpha1',
+            messages_modulepath='osconfig_v1alpha1_messages',
+            default_version=True
+        ),
+    },
     'oslogin': {
         'v1': APIDef(
             class_path='googlecloudsdk.third_party.apis.oslogin.v1',
@@ -666,6 +704,14 @@ MAP = {
             class_path='googlecloudsdk.third_party.apis.pubsub.v1',
             client_classpath='pubsub_v1_client.PubsubV1',
             messages_modulepath='pubsub_v1_messages',
+            default_version=True
+        ),
+    },
+    'recommender': {
+        'v1alpha1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.recommender.v1alpha1',
+            client_classpath='recommender_v1alpha1_client.RecommenderV1alpha1',
+            messages_modulepath='recommender_v1alpha1_messages',
             default_version=True
         ),
     },
@@ -713,12 +759,18 @@ MAP = {
             default_version=True
         ),
     },
-    'serverless': {
-        'v1alpha1': APIDef(
-            class_path='googlecloudsdk.third_party.apis.serverless.v1alpha1',
-            client_classpath='serverless_v1alpha1_client.ServerlessV1alpha1',
-            messages_modulepath='serverless_v1alpha1_messages',
+    'securitycenter': {
+        'v1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.securitycenter.v1',
+            client_classpath='securitycenter_v1_client.SecuritycenterV1',
+            messages_modulepath='securitycenter_v1_messages',
             default_version=True
+        ),
+        'v1beta1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.securitycenter.v1beta1',
+            client_classpath='securitycenter_v1beta1_client.SecuritycenterV1beta1',
+            messages_modulepath='securitycenter_v1beta1_messages',
+            default_version=False
         ),
     },
     'servicemanagement': {
@@ -876,6 +928,12 @@ MAP = {
             class_path='googlecloudsdk.third_party.apis.vpcaccess.v1alpha1',
             client_classpath='vpcaccess_v1alpha1_client.VpcaccessV1alpha1',
             messages_modulepath='vpcaccess_v1alpha1_messages',
+            default_version=False
+        ),
+        'v1beta1': APIDef(
+            class_path='googlecloudsdk.third_party.apis.vpcaccess.v1beta1',
+            client_classpath='vpcaccess_v1beta1_client.VpcaccessV1beta1',
+            messages_modulepath='vpcaccess_v1beta1_messages',
             default_version=True
         ),
     },

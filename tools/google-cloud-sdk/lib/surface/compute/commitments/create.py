@@ -34,7 +34,7 @@ from googlecloudsdk.core import properties
 _MISSING_COMMITMENTS_QUOTA_REGEX = r'Quota .COMMITMENTS. exceeded.+'
 
 
-@base.ReleaseTracks(base.ReleaseTrack.GA, base.ReleaseTrack.BETA)
+@base.ReleaseTracks(base.ReleaseTrack.GA)
 class Create(base.Command):
   """Create Google Compute Engine commitments."""
 
@@ -91,6 +91,31 @@ class Create(base.Command):
     return result
 
 
+@base.ReleaseTracks(base.ReleaseTrack.BETA)
+class CreateBeta(Create):
+  """Create Google Compute Engine commitments."""
+
+  @classmethod
+  def Args(cls, parser):
+    flags.MakeCommitmentArg(False).AddArgument(parser, operation_type='create')
+    flags.AddCreateFlags(parser, enable_ssd_and_accelerator_support=True)
+    flags.AddReservationArgGroup(parser)
+
+  def _MakeCreateRequest(self, args, messages, project, region, commitment_ref,
+                         holder):
+    commitment = messages.Commitment(
+        reservations=reservation_helper.MakeReservations(
+            args, messages, holder),
+        name=commitment_ref.Name(),
+        plan=flags.TranslatePlanArg(messages, args.plan),
+        resources=flags.TranslateResourcesArgGroup(messages, args))
+    return messages.ComputeRegionCommitmentsInsertRequest(
+        commitment=commitment,
+        project=project,
+        region=commitment_ref.region,
+    )
+
+
 @base.ReleaseTracks(base.ReleaseTrack.ALPHA)
 class CreateAlpha(Create):
   """Create Google Compute Engine commitments."""
@@ -108,7 +133,8 @@ class CreateAlpha(Create):
     commitment_type_flag = flags.GetTypeMapperFlag(messages)
     commitment_type = commitment_type_flag.GetEnumForChoice(args.type)
     commitment = messages.Commitment(
-        allocations=reservation_helper.MakeReservations(args, messages, holder),
+        reservations=reservation_helper.MakeReservations(
+            args, messages, holder),
         name=commitment_ref.Name(),
         plan=flags.TranslatePlanArg(messages, args.plan),
         resources=flags.TranslateResourcesArgGroup(messages, args),

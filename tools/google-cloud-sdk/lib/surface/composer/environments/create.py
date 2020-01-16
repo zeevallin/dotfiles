@@ -23,6 +23,7 @@ from googlecloudsdk.api_lib.composer import operations_util as operations_api_ut
 from googlecloudsdk.calliope import arg_parsers
 from googlecloudsdk.calliope import base
 from googlecloudsdk.command_lib.composer import flags
+from googlecloudsdk.command_lib.composer import image_versions_util
 from googlecloudsdk.command_lib.composer import parsers
 from googlecloudsdk.command_lib.composer import resource_args
 from googlecloudsdk.command_lib.composer import util as command_util
@@ -30,8 +31,9 @@ from googlecloudsdk.command_lib.util.args import labels_util
 from googlecloudsdk.core import log
 
 
-def _ImageVersionFromAirflowVersion(airflow_version):
-  return 'composer-latest-airflow-{}'.format(airflow_version)
+PREREQUISITE_OPTION_ERROR_MSG = """\
+Cannot specify --{opt} without --{prerequisite}.
+"""
 
 
 def _CommonArgs(parser):
@@ -147,8 +149,8 @@ information on how to structure KEYs and VALUEs, run
       type=image_version_type,
       help="""Version of the image to run in the environment.
 
-      Value consists of version information for both Cloud Composer and
-      Apache Airflow. Must be of the form `composer-A.B.C-airflow-X.Y[.Z]`.
+      The image version encapsulates the versions of both Cloud Composer
+      and Apache Airflow. Must be of the form `composer-A.B.C-airflow-X.Y[.Z]`.
 
       The Cloud Composer and Airflow versions are semantic versions.
       `latest` can be provided instead of an explicit Cloud Composer
@@ -201,7 +203,8 @@ class Create(base.Command):
 
     self.image_version = None
     if args.airflow_version:
-      self.image_version = _ImageVersionFromAirflowVersion(args.airflow_version)
+      self.image_version = image_versions_util.ImageVersionFromAirflowVersion(
+          args.airflow_version)
     elif args.image_version:
       self.image_version = args.image_version
 
@@ -258,6 +261,83 @@ class CreateBeta(Create):
     {top_command} composer operations describe
   """
 
+  @staticmethod
+  def Args(parser):
+    Create.Args(parser)
+    flags.AddPrivateIpAndIpAliasEnvironmentFlags(parser)
+
+  def Run(self, args):
+    self.ParseIpAliasConfigOptions(args)
+    self.ParsePrivateEnvironmentConfigOptions(args)
+    return super(CreateBeta, self).Run(args)
+
+  def ParseIpAliasConfigOptions(self, args):
+    """Parses the options for VPC-native configuration."""
+    if args.enable_private_environment and not args.enable_ip_alias:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-ip-alias', opt='enable-private-environment'))
+    if args.cluster_ipv4_cidr and not args.enable_ip_alias:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-ip-alias', opt='cluster-ipv4-cidr'))
+    if args.cluster_secondary_range_name and not args.enable_ip_alias:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-ip-alias',
+              opt='cluster-secondary-range-name'))
+    if args.services_ipv4_cidr and not args.enable_ip_alias:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-ip-alias', opt='services-ipv4-cidr'))
+    if args.services_secondary_range_name and not args.enable_ip_alias:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-ip-alias',
+              opt='services-secondary-range-name'))
+
+  def ParsePrivateEnvironmentConfigOptions(self, args):
+    """Parses the options for Private Environment configuration."""
+    if args.enable_private_endpoint and not args.enable_private_environment:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-private-environment',
+              opt='enable-private-endpoint'))
+
+    if args.master_ipv4_cidr and not args.enable_private_environment:
+      raise command_util.InvalidUserInputError(
+          PREREQUISITE_OPTION_ERROR_MSG.format(
+              prerequisite='enable-private-environment',
+              opt='master-ipv4-cidr'))
+
+  def GetOperationMessage(self, args):
+    """See base class."""
+    return environments_api_util.Create(
+        self.env_ref,
+        args.node_count,
+        labels=args.labels,
+        location=self.zone,
+        machine_type=self.machine_type,
+        network=self.network,
+        subnetwork=self.subnetwork,
+        env_variables=args.env_variables,
+        airflow_config_overrides=args.airflow_configs,
+        service_account=args.service_account,
+        oauth_scopes=args.oauth_scopes,
+        tags=args.tags,
+        disk_size_gb=args.disk_size >> 30,
+        python_version=args.python_version,
+        image_version=self.image_version,
+        use_ip_aliases=args.enable_ip_alias,
+        cluster_secondary_range_name=args.cluster_secondary_range_name,
+        services_secondary_range_name=args.services_secondary_range_name,
+        cluster_ipv4_cidr_block=args.cluster_ipv4_cidr,
+        services_ipv4_cidr_block=args.services_ipv4_cidr,
+        private_environment=args.enable_private_environment,
+        private_endpoint=args.enable_private_endpoint,
+        master_ipv4_cidr=args.master_ipv4_cidr,
+        release_track=self.ReleaseTrack())
+
 
 @base.ReleaseTracks(base.ReleaseTrack.ALPHA)
 class CreateAlpha(CreateBeta):
@@ -304,4 +384,12 @@ class CreateAlpha(CreateBeta):
         python_version=args.python_version,
         image_version=self.image_version,
         airflow_executor_type=args.airflow_executor_type,
+        use_ip_aliases=args.enable_ip_alias,
+        cluster_secondary_range_name=args.cluster_secondary_range_name,
+        services_secondary_range_name=args.services_secondary_range_name,
+        cluster_ipv4_cidr_block=args.cluster_ipv4_cidr,
+        services_ipv4_cidr_block=args.services_ipv4_cidr,
+        private_environment=args.enable_private_environment,
+        private_endpoint=args.enable_private_endpoint,
+        master_ipv4_cidr=args.master_ipv4_cidr,
         release_track=self.ReleaseTrack())

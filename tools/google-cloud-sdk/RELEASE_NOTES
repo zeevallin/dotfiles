@@ -5,11 +5,547 @@ Copyright 2014-2019 Google Inc. All rights reserved.
 Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
 
 
+## 244.0.0 (2019-04-30)
+
+### Cloud Scheduler
+
+* Added auth flags to `gcloud beta scheduler jobs create http`.
+
+### Kubernetes Engine
+
+* Promote list usable subnetworks from Beta to GA.
+* Added the `--workload-metadata-from-node` flag to `gcloud beta container
+  node-pools update` for changing the type of metadata server visible to pods
+  running in the nodepool.
+
+### Vision API
+
+* Added `--detect_objects`, `--detect_text_pdf`, `--detect_text_tiff` commands to `gcloud ml vision`.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 243.0.0 (2019-04-23)
+
+### Breaking Changes
+
+*   **(AI Platform)** Renamed `--worker-server-count` flag of
+    `gcloud ml-engine jobs submit training ` to `--worker-count`.
+*   **(App Engine)** Updated `gcloud app repair` to no longer recreate
+    a deleted service account.
+*   **(Cloud Machine Learning Engine)** Deprecated the
+    `gcloud ml-engine` command group. Use `gcloud ai-platform`  instead.
+
+
+### AI Platform
+
+* Added the `gcloud ai-platform` command group to replace `gcloud ml-engine`.
+* Promoted `gcloud ai-platform versions <create|update>` to beta.
+* Added the `--enable-console-logging` flag to `gcloud beta ai-platform models
+  create` to enable logging of stderr and stdout streams for online prediction
+  in Stackdriver Logging.
+
+### Cloud Composer
+
+* Added five new flags to `gcloud beta composer environments create` to support
+  IP alias (a.k.a. VPC-native) for Composer environments:
+    *  `--enable-ip-alias`
+    *  `--cluster-ipv4-cidr`
+    *  `--cluster-secondary-range-name`
+    *  `--services-ipv4-cidr`
+    *  `--services-secondary-range-name`
+
+### Cloud Firestore Emulator
+
+* Released Cloud Firestore Emulator version 1.4.5
+  * Fixed bug for Firestore REST API
+  * Added support to allow secure JWTs with warnings
+
+### Cloud SQL
+
+* Added the `--root-password` flag to `gcloud sql instances create`.
+
+### Cloud Tasks
+
+*   Replaced `gcloud tasks queues <create|update>-app-engine-queue` with
+    `gcloud tasks queues <create|update>` in beta and GA.
+
+### Compute Engine
+
+* Promoted `gcloud compute network-endpoint-groups` command group to GA.
+* Promoted the `--storage-location` and `--labels` flag of
+  `gcloud compute disks snapshot` to GA.
+* Promoted `--network-endpoint-group` and `--network-endpoint-group-zone`
+  flags of `gcloud compute backend-services
+  <add-backend|remove-backend|update-backend>` to GA.
+* Promoted `--max-connections-per-endpoint` and `--max-rate-per-endpoint`
+  flags of `gcloud compute backend-services <add-backend|update-backend>` to GA.
+* Promoted `--use-serving-port` flag of `gcloud compute health-checks
+  <http|https|http2|ssl> create` to GA.
+* Promoted `--custom-request-headers` and `--no-custom-request-headers` flags of
+  `gcloud compute backend-services <create|update>` to GA.
+* Promoted `--no-guest-environment`, `--network`, and `--subnet` flags of `gcloud
+  compute images import` to GA.
+* Changed `--no-guest-environment` to `--guest-environment` flag in `gcloud
+  compute images import`.
+* Promoted `--subnet` flag of `gcloud compute images export` to GA.
+* Promoted feature allowing `gcloud beta compute images <import|export>` to use
+  temporary buckets in the same region as source/destination buckets. This avoids
+  cross-region copying and its associated cost and performance penalty.
+* Promoted `--container-mount-disk-*` flags of
+  `gcloud compute instances <create-with-container|update-container>` to GA.
+* Promoted `--container-mount-disk-*` flags of
+  `gcloud compute instance-templates create-with-container` to GA.
+
+### Kubernetes Engine
+
+* Added `--update-addons=CloudRun=ENABLED|DISABLED` to allow enabling
+  and disabling the Cloud Run on Google Kubernetes Engine add-on for existing
+  GKE clusters.
+* Promoted the `--sandbox` flag of `gcloud container node-pools create` to beta.
+  This flag enables the requested sandbox on all nodes in the node-pool.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 242.0.0 (2019-04-16)
+
+### Breaking Changes
+
+*   **(Cloud Composer)** Deprecated support for the `initdb`, `resetdb`, and `upgradedb` subcommands
+    within `gcloud composer environments run`. Execution of these subcommands
+    can be detrimental to the Airflow metadata of existing Composer
+    environments.
+
+
+### Cloud Data Catalog
+
+* Added the `--lookup-entry` flag to `gcloud beta data-catalog entries update`
+  to update the entry corresponding to the lookup of the given resource.
+
+### Cloud Firestore Emulator
+
+* Release Cloud Firestore Emulator version 1.4.4
+  * Reduced lock contention for multiple writes on a single document
+  * Fix bug where no-op writes were incorrectly updating the updatedAt timestamp
+* Release Cloud Firestore Emulator version 1.4.3
+  * Fixes bug that caused parsing security rules with string literals to fail
+
+### Compute Engine
+
+* Updated `gcloud beta compute <ssh|scp>` to use IAP Tunneling by default
+  if an external interface/IP address is not available and `--internal-ip` has
+  not been specified.
+* Added warning message about the maximum number of nodes that a cluster can have when being created.
+* Added the `--deprecate-in` and `--deprecate-on` flags to `gcloud compute
+  images deprecate` to set informational deprecate times to images.
+
+
+### Identity and Access Management
+
+*   Added the `--description` flag to `gcloud beta iam service-accounts
+    <create|update>`.
+
+### Kubernetes Engine
+
+* Renamed `--size` flag of `gcloud container clusters resize` to `--num-nodes`. `--size` retained as an alias.
+* Disabled node auto-repair and node auto-upgrade by default when
+`--enable-kubernetes-alpha` flag is used to create clusters with Kubernetes
+alpha features enabled. Users may now create alpha clusters without specifying
+`--no-enable-autorepair` or `--no-enable-autoupgrade` flags. However, for
+creating new node pools in an existing alpha cluster, these two flags may still
+be required.
+
+### Miscellaneous
+
+* Fixed a bug in `gcloud config config-helper` which could result in old
+  identity tokens when `--force-auth-refresh` was not present.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 241.0.0 (2019-04-03)
+
+### Breaking Changes
+
+*   **(Cloud Functions)** Modified `gcloud functions deploy` such that the `--runtime` flag needs to be set when deploying a new function.
+
+
+### App Engine
+
+* Updated the Java SDK to version 1.9.73.
+  Please visit the following release notes for details:
+  https://cloud.google.com/appengine/docs/java/release-notes
+* Updated the Python SDK to version 1.9.85.
+  Please visit the following release notes for details:
+  https://cloud.google.com/appengine/docs/python/release-notes
+
+### BigQuery
+
+* Added DML/DDL query results that display the number of affected rows (for DML) and performed operation and target name (for DDL).
+
+### Cloud Asset Inventory
+
+* Promoted `gcloud asset` command group to GA
+
+### Cloud Bigtable
+
+*   Promoted the following to GA:
+    *   `gcloud bigtable app-profiles` command group
+    *   `gcloud bigtable clusters create`
+    *   `gcloud bigtable clusters update`
+    *   `gcloud bigtable clusters delete`
+
+### Cloud Build
+
+*   Added `--network=cloudbuild` to `gcloud builds submit --tag` invocations of
+    `docker build`. This enables access to metadata during Dockerfile `RUN`
+    operations at build time.
+
+### Cloud Composer
+
+* Added three new flags to `gcloud beta composer environments create` to support
+  Private IP Composer environments:
+    *  `--enable-private-environment`
+    *  `--enable-private-endpoint`
+    *  `--master-ipv4-cidr`
+* Added `gcloud beta composer environments list-upgrades` to list all image
+  version upgrades that are supported for a specified environment.
+* Added two mutually exclusive flags to `gcloud beta composer environments
+  update` to allow for in-place environment upgrades:
+    *  `--airflow-version`
+    *  `--image-version`
+
+### Cloud DNS
+
+* Added support for DNS peering in `gcloud beta dns managed-zones`.
+* Added `--enable-logging` flag to `gcloud beta dns policies` to enable query logging.
+
+
+### Cloud Data Catalog
+
+* Added the `gcloud beta data-catalog entries` command group, which provides
+  lookup, describe, and schema update functionality for Cloud Data Catalog
+  entries.
+
+### Cloud Firestore Emulator
+
+* Release Cloud Firestore Emulator version 1.4.2
+  * Adds implementations for BeginTransaction and Rollback
+
+### Cloud Functions
+
+* Added `--service-account` flag to `gcloud functions deploy`.
+* Added `--vpc-connector` flag to `gcloud beta functions deploy`.
+
+### Cloud Memorystore
+
+*   Added `gcloud redis instances failover` which provides the ability to
+    failover a standard tier Cloud Memorystore for Redis instance from the
+    master node to its replica.
+*   Added `--redis-version` flag to `gcloud beta redis instances create` to
+    enable the specification of a preferred Redis version compatibility; this
+    can be either `redis_3_2` or `redis_4_0`.
+*   Modified the `--update-redis-config` flag of `gcloud redis instances update`
+    to accept three additional parameters for Redis 4.0 compatible instances:
+    `activedefrag`, `lfu-decay-time`, `lfu-log-factor`.
+
+### Cloud Pub/Sub
+
+* Added optional flags `--push-auth-service-account` and
+ `--push-auth-token-audience` for defining an authenticated push subscription in
+ `gcloud beta pubsub subscriptions <create|update|modify-push-config>`.
+
+### Cloud Storage
+
+* Updated gsutil component to 4.38.
+
+### Cloud Video Intelligence API
+
+* Added `gcloud beta ml video transcribe-speech|detect-text|detect-object`
+  commands.
+
+### Compute Engine
+
+* Promoted `--logging-aggregation-interval`, `--logging-flow-sampling`, and
+  `--logging-metadata` flags of
+  `gcloud compute networks subnets <create|update>` to beta.
+* Modified `gcloud compute networks subnets update` to support specifying
+  `--logging-aggregation-interval`, `--logging-flow-sampling`, and
+  `--logging-metadata` flags in a single call.
+* Promoted `gcloud compute reservations` command group to beta.
+* Promoted `--reservation` and `--reservation-affinity` of `gcloud compute instance-templates create` to beta.
+* Promoted `--reservation` and `--reservations-from-file` of `gcloud compute commitments create` to beta.
+* Promoted `gcloud compute commitments update-reservations` to beta.
+* Promoted 100G interconnect link type support for `gcloud compute interconnects create` to beta.
+* Deprecated the creation of new legacy network.
+
+### Firebase Test Lab
+
+* Promoted `--num-flaky-test-attempts` flag of `gcloud firebase test
+  <android|ios> run` to GA. This flag specifies how many times to rerun any
+  failed executions.
+
+### Kubernetes Engine
+
+*   Promoted the `--security-group` flag of `gcloud container clusters create`
+    to beta. The flag enables support for Google Groups in Kubernetes RBAC
+    rules.
+*   Added the `--enable-intra-node-visibility` flag to `gcloud beta container
+    clusters create`.
+*   Promoted the `--enable-tpu` flag and the `--tpu-ipv4-cidr` flag of `gcloud
+    container clusters create` to GA. The flags enables support for using Cloud
+    TPU in Google Kubernetes Engine clusters.
+*   Changed the default output formatting for the `gcloud beta container
+    binauthz attestations list` command.
+*   Google Kubernetes Engine kubectl is updated to 1.11.9. Addresses security
+    vulnerability: CVE-2019-1002101.
+*   Updated extra Google Kubernetes Engine kubectl versions:
+    *   kubectl.1.11 (patch 1.11.9)
+    *   kubectl.1.12 (patch 1.12.7)
+    *   kubectl.1.13 (patch 1.13.5)
+    *   kubectl.1.14 (patch 1.14.0)
+*   Removed extra Google Kubernetes Engine kubectl versions, since these
+    versions are vulnerable.
+    *   kubectl.1.9
+    *   kubectl.1.10
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 240.0.0 (2019-03-26)
+
+### Breaking Changes
+
+*   **(Kubernetes Engine)** Enabled node auto-upgrade by default for clusters
+    and node-pools created with `gcloud beta container <clusters|node-pools>
+    create`. To disable manually, **(Kubernetes Engine)** use the
+    `--no-enable-autoupgrade` flag.
+
+
+### Cloud SDK
+
+* Added the `--impersonate-service-account` flag to `gcloud`.
+
+### App Engine
+
+* Fixed a bug which could cause gcloud to incorrectly print `http` URLs for
+  services, when `https` URLs would be more appropriate.
+* Removed 32MB file size limit for second generation runtimes.
+
+### Cloud DNS
+
+* Promoted private zones of the `gcloud dns managed-zones` command group to GA.
+  Use the `--visibility` and `--networks` flags to configure zone visibility.
+
+### Cloud Dataproc
+
+* Added `gcloud beta dataproc <jobs submit|workflow-templates add-job> presto`
+  to enable submitting Presto jobs to a Dataproc cluster and adding Presto jobs
+  to workflow templates, respectively.
+* Added `--enable-component-gateway` flag to `gcloud beta dataproc clusters
+  create` and `gcloud beta dataproc workflow-templates set-managed-cluster`.
+
+### Compute Engine
+
+* Promoted `--failover-ratio`, `--drop-traffic-if-unhealthy`, and
+  `--connection-drain-on-failover` flags of
+  `gcloud compute backend-services <create|update>` to beta.
+* Promoted `--failover` flag of
+  `gcloud compute backend-services <add_backend|update_backend>` to beta.
+* Promoted `gcloud compute instance-groups managed wait-until` command to beta.
+* Promoted `--region` flag of `gcloud compute disks` and related commands to GA.
+* Added `gcloud beta compute external-vpn-gateway` command group to enable reading and manipulating of Compute Engine external VPN gateways.
+* Added `gcloud beta compute vpn-gateway` command group to enable reading and manipulating of Compute Engine VPN gateways.
+* Updated `gcloud beta compute vpn-tunnel` command to enable the creation of HA VPN tunnels.
+
+### Identity and Access Management
+
+* Added a new column, `DISABLED`, to the return table of
+  `gcloud iam service-account list`, which displays the state of the service
+  account listed.
+
+### Kubernetes Engine
+
+* Added the `--release-channel` flag to `gcloud alpha container clusters create`
+  for subscribing a cluster to a release channel.
+* Promoted `--default-max-pods-per-node` flag of `gcloud container clusters create` from Beta to GA.
+* Promoted `--max-pods-per-node` flag of `gcloud container node-pools create` from Beta to GA.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 239.0.0 (2019-03-19)
+
+### Cloud Dataproc
+
+* Added `gcloud beta dataproc autoscaling-policies` command group for managing
+  Cloud Dataproc autoscaling policies. For more information, see:
+  https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/autoscaling
+* Added `--autoscaling-policy` flag to
+  `gcloud beta dataproc clusters <create|update>` and
+  `gcloud beta dataproc workflow-templates set-managed-cluster` to support
+  enabling and disabling autoscaling on Cloud Dataproc clusters with autoscaling
+  policies.
+
+### Cloud Firestore Emulator
+
+* Release Cloud Firestore Emulator version 1.4.1
+  * Fixes bug where an empty CommitRequest was trigger exceptions
+
+### Cloud Resource Manager
+
+* Promoted `resource-manager folders` command group to GA.
+
+### Compute Engine
+
+* Promoted `--bandwidth` flag of `gcloud compute interconnects attachments dedicated <create|update>` to GA.
+* Promoted load_balancing_scheme enum value INTERNAL_SELF_MANAGED to beta in 'gcloud compute forwarding-rules create' and 'gcloud compute backend-services create'.
+* Promoted `gcloud compute instances get-shielded-identity` to GA.
+* Promoted the `--shielded-vtpm`, `--shielded-secure-boot`, and
+  `--shielded-integrity-monitoring` flags of `gcloud compute instances create`
+  to GA.
+* Promoted the `--shielded-vtpm`, `--shielded-secure-boot`, and
+  `--shielded-integrity-monitoring` flags of `gcloud compute instance-templates
+  create` to GA.
+* Promoted the `--shielded-vtpm`, `--shielded-secure-boot`,
+  `--shielded-integrity-monitoring`, and `--shielded-learn-integrity-policy`
+  flags of `gcloud compute instances update` to GA.
+* Removed the deprecated `--shielded-vm-vtpm`, `--shielded-vm-secure-boot`, and
+  `--shielded-vm-integrity-monitoring` flags of `gcloud compute instances
+  create` from alpha and beta.
+* Removed the deprecated `--shielded-vm-vtpm`, `--shielded-vm-secure-boot`, and
+  `--shielded-vm-integrity-monitoring` flags of `gcloud compute
+  instance-templates create` from alpha and beta.
+* Removed the deprecated `--shielded-vm-vtpm`, `--shielded-vm-secure-boot`,
+  `--shielded-vm-integrity-monitoring`, and
+  `--shielded-vm-learn-integrity-policy` flags of `gcloud compute instances
+  update` from alpha and beta.
+
+### Kubernetes Engine
+
+* Update Google Container Engine's kubectl so that it now first attempts
+to match the API server version. If successful, the kubectl will
+delegate to the matching version of kubectl. Otherwise, it defaults
+to execute the current 1.11.7 version of kubectl.
+* Updated extra Google Kubernetes Engine kubectl versions:
+  * kubectl.1.9  (patch 1.9.11)
+  * kubectl.1.10 (patch 1.10.13)
+  * kubectl.1.11 (patch 1.11.8)
+  * kubectl.1.12 (patch 1.12.6)
+  * kubectl.1.13 (patch 1.13.4)
+
+* In June 2019, node auto-upgrade will be enabled by default for newly created
+clusters and node pools. To disable it, use the `--no-enable-autoupgrade` flag.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 238.0.0 (2019-03-12)
+
+### App Engine
+
+* Updated the Python SDK to version 1.9.84.
+  Please visit the following release notes for details:
+  https://cloud.google.com/appengine/docs/python/release-notes
+
+* Added a new field, 'main', to app.yaml. This allows users of the Go
+  second-generation runtimes to specify which package to build. See
+  https://cloud.google.com/appengine/docs/standard/go111/config/appref for more
+  information.
+
+### App Engine Flexible Environment
+
+* Promoted network.session_affinity flag in yaml file to GA.
+
+### Cloud Access Context Manager
+
+*   Promoted the gcloud access-context-manager command group to GA
+*   Removed the unrestricted-services field from alpha and beta, always set to default '*'.
+
+### Cloud Dataproc
+
+* Promoted `--optional-components` of `gcloud dataproc clusters` to GA.
+
+### Cloud Functions
+
+* Promoted `max-instances` and `clear-max-instances` flags of `gcloud functions deploy` to beta.
+
+
+### Cloud Machine Learning Engine
+
+* Promoted `--machine-type` flag of `gcloud ml-engine versions create` command to GA.
+
+### Kubernetes Engine
+
+* Added the `--enable-shielded-containers` flag to `gcloud beta container clusters create`.
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
+## 237.0.0 (2019-03-05)
+
+### Cloud SDK
+
+* Fixed issue affecting users overwriting an existing Cloud SDK install via the
+  Windows installer, in which certain gcloud commands crashed with a "gcloud
+  crashed (LayoutException): Multiple definitions for release track" error. This
+  issue can be tracked at <https://issuetracker.google.com/123390310>.
+
+### BigQuery
+
+* Fixes bug in formatting pre-1900 timestamps.
+
+### Cloud Dataproc
+
+* Fixed a bug where several fields were hidden from `gcloud dataproc clusters
+<import|export>` in all release tracks. Note that these fields were always
+available in `gcloud dataproc clusters <create-from-file|describe>`.
+
+### Cloud Storage
+
+* Updated gsutil component to 4.37.
+
+### Compute Engine
+
+* Promoted the `--server-binding` flag of `gcloud compute sole-tenancy
+  node-templates create` to beta.
+* Reduced lower bound for data disk sizes from 10GB to 1GB for
+  `gcloud compute instances create`.
+* Added `resources-accelerator` to `gcloud beta compute commitments create`.
+* Promoted `all` option of `--ports` flag for `gcloud compute forwarding-rules`
+  to GA.
+* Added INSTANCE_TEMPLATE and VERSION_NAME columns to output of `gcloud compute
+  instance-groups managed list-instances`.
+
+### Kubernetes Engine
+
+* Updated Google Kubernetes Engine's kubectl from version 1.10.7 to 1.11.7.
+* Added extra Google Kubernetes Engine kubectl versions:
+  * kubectl.1.9
+  * kubectl.1.10
+  * kubectl.1.11
+  * kubectl.1.12
+  * kubectl.1.13
+
+
+Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
+
+
 ## 236.0.0 (2019-02-26)
 
 ### Cloud SDK
 
-- Handle errors from service account token revocation for `gcloud auth revoke` and print a friendly error message with more detailed instructions on how to revoke a service account token
+* Modified error handling for `gcloud auth revoke` when revoking a service
+  account token to print a friendly error message with more detailed
+  instructions on how to revoke the token.
 
 ### Cloud Asset Inventory
 
@@ -17,15 +553,15 @@ Subscribe to these release notes at [https://groups.google.com/forum/#!forum/goo
 
 ### Cloud Dataproc
 
-Added `--kerberos-root-principal-password-uri`, `--kerberos-kms-key`, and
-`--kerberos-config-file` flags to `gcloud beta dataproc clusters create`
-and `gcloud beta dataproc workflow-templates set-managed-cluster`.
+* Added `--kerberos-root-principal-password-uri`, `--kerberos-kms-key`, and
+  `--kerberos-config-file` flags to `gcloud beta dataproc clusters create`
+  and `gcloud beta dataproc workflow-templates set-managed-cluster`.
 
 ### Cloud Firestore Emulator
 
-* Release Cloud Firestore Emulator version 1.4.0
-  * Add support for the `debug(...)` function in security rules
-  * Simplify security rule evaluation and rule coverage reports
+*   Released Cloud Firestore Emulator version 1.4.0:
+    *   Added support for the `debug(...)` function in security rules.
+    *   Simplified security rule evaluation and rule coverage reports.
 
 ### Cloud Services
 
@@ -175,7 +711,7 @@ Subscribe to these release notes at [https://groups.google.com/forum/#!forum/goo
   * `--parameter-server-accelerator`
   * `--parameter-server-image-uri`
 
-### Cloud PubSub
+### Cloud Pub/Sub
 
 *   Promoted Snapshot & Seek features to GA. These features allow users to
     create snapshots of subscription backlog state, and later restore that
@@ -271,7 +807,8 @@ Subscribe to these release notes at [https://groups.google.com/forum/#!forum/goo
 ### Cloud Datastore Emulator
 
 * Release Cloud Datastore Emulator version 2.1.0
-  * Implement export/import for emulator.
+  * Implement export/import for emulator. For details, refer to
+    <https://cloud.google.com/datastore/docs/tools/emulator-export-import>.
 
 ### Cloud SQL
 
@@ -2497,7 +3034,7 @@ Subscribe to these release notes at [https://groups.google.com/forum/#!forum/goo
    gcloud functions deploy --trigger-event \
    providers/cloud.storage/eventTypes/object.change \
    --trigger-resource <your_bucket_name>
-* **(MODIFIED)** The schema for pub/sub events has changed. `eventId`,
+* **(MODIFIED)** The schema for Pub/Sub events has changed. `eventId`,
   `timestamp`, `resource`, and `eventType` have all been moved inside the
   context property e.g., context.timestamp. All functions deployed using
   `--trigger-topic` flag will use the new schema. To get the legacy behavior,
@@ -2581,7 +3118,7 @@ date, apps will be blocked from deploying until you specify the SSL library
   `gcloud dataproc jobs submit` are now mutually exclusive. The previous usage
   had been deprecated for more than a year.
 *  **(MODIFIED)** Soon changing the default event schema returned by Cloud
-   Functions with a pub/sub trigger(e.g. `--trigger-topic`). The `eventId`,
+   Functions with a Pub/Sub trigger(e.g. `--trigger-topic`). The `eventId`,
    `timestamp`, `eventType`, and `resource` properties will all be moved into
    the `event.context` property.
    *   To opt-in to the new behavior early, run
@@ -2819,9 +3356,9 @@ date, apps will be blocked from deploying until you specify the SSL library
 
 ### Miscellaneous
 
-* Updated the Pubsub Emulator
-  * Pubsub emulator now spams the console less.
-  * Pubsub emulator properly sets the default value for Subscription.message_retention_duration.
+* Updated the Pub/Sub Emulator
+  * Pub/Sub emulator now spams the console less.
+  * Pub/Sub emulator properly sets the default value for Subscription.message_retention_duration.
 
 
 Subscribe to these release notes at [https://groups.google.com/forum/#!forum/google-cloud-sdk-announce](https://groups.google.com/forum/#!forum/google-cloud-sdk-announce).
@@ -2904,7 +3441,7 @@ labels.
 
 ### Breaking Changes
 
-* **(REMOVED)** Removed support for the format `--scopes=[ACCOUNT=]SCOPE,[[ACCOUNT=]SCOPE,…]]` in `gcloud compute instances <create|create-with-container>` and `gcloud compute instance-templates <create|create-with-container>`. Please use `--scopes=[SCOPE, …]` and `--service-account=ACCOUNT` instead.
+* **(REMOVED)** Removed support for the format `--scopes=[ACCOUNT=]SCOPE,[[ACCOUNT=]SCOPE,...]]` in `gcloud compute instances <create|create-with-container>` and `gcloud compute instance-templates <create|create-with-container>`. Please use `--scopes=[SCOPE, ...]` and `--service-account=ACCOUNT` instead.
 
 *   **(MODIFIED)** Added cautionary 'y/n' prompts to
     `gcloud beta iam roles create`, `gcloud beta iam roles update`, and
@@ -5244,7 +5781,7 @@ disabled on existing clusters via the
 
 ### Emulators
 
-*   Datastore emulator now defaults to port 8081, and pubsub emulator to 8085.
+*   Datastore emulator now defaults to port 8081, and Pub/Sub emulator to 8085.
 
 
 ## 149.0.0 (2017-03-29)
@@ -5738,13 +6275,13 @@ disabled on existing clusters via the
 * Show Cloud OS Images (COS) in 'gcloud compute images list' output.
 * Added beta for 'compute xpn get-xpn-host' and 'compute xpn organizations list-xpn-hosts'.
 
-### Cloud Tools for Powershell
+### Cloud Tools for PowerShell
 
 * Added beta cmdlets for Log Sinks and Log Metrics.
 
 ### Google Cloud Pub/Sub
 
-* The pubsub emulator now adheres to the documented topic and subscription
+* The Pub/Sub emulator now adheres to the documented topic and subscription
 name constraints, including support for '+' and '%25' in names via
 REST.
 
@@ -5905,7 +6442,7 @@ if a file upload is necessary.
 
 ### Emulators
 
-* The pubsub emulator now accepts web-safe Base64 encoded data.
+* The Pub/Sub emulator now accepts web-safe Base64 encoded data.
 
 
 ## 139.0.1 (2017-01-12)
@@ -6219,7 +6756,7 @@ if a file upload is necessary.
 
 * Add `--service-label` flag to `gcloud alpha compute forwarding-rules create`.
 
-### Cloud Tools for Powershell
+### Cloud Tools for PowerShell
 
 * Add cmdlets to manage Cloud Storage ACLs.
 
@@ -6374,7 +6911,7 @@ The alpha commands will remain, as is, until at least March of 2017.
   the `gcloud alpha container operations cancel` command.  See
   `gcloud alpha container operations cancel --help` for more details.
 
-### Cloud Tools for Powershell
+### Cloud Tools for PowerShell
 
 * Fix a bug where the module is not picking up the active user credentials
   correctly.
@@ -6740,7 +7277,7 @@ The alpha commands will remain, as is, until at least March of 2017.
   * Removed `jobs list` --job-name flag.
   * Added `jobs list` --uri flag.
 
-### Cloud Tools for Powershell
+### Cloud Tools for PowerShell
 
 * Add Google Cloud Sql and Google Cloud Dns powershell cmdlets.
 
@@ -7256,7 +7793,7 @@ The alpha commands will remain, as is, until at least March of 2017.
 
 ### Emulators
 
-*   Fixed behavior of pub/sub emulator subscription topic names when their
+*   Fixed behavior of Pub/Sub emulator subscription topic names when their
     respective topics are deleted. They should now be set to `_deleted-topic_`.
 
 

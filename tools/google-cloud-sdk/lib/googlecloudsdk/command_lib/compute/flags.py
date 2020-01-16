@@ -20,7 +20,6 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import functools
-import enum  # pylint: disable=unused-import, for pytype
 
 from googlecloudsdk.api_lib.compute import filter_rewrite
 from googlecloudsdk.api_lib.compute.regions import service as regions_service
@@ -237,7 +236,6 @@ class ResourceArgScopes(object):
     self.scopes = {}
 
   def AddScope(self, scope, collection):
-    # type: (enum.Enum, str) -> None
     self.scopes[scope] = ResourceArgScope(scope, self.flag_prefix, collection)
 
   def SpecifiedByArgs(self, args):
@@ -510,7 +508,7 @@ class ResourceResolver(object):
         api_resource_registry)
 
     # Now unpack each element.
-    refs = [ref[0] for ref in refs]  # type: list[resources.Resource]
+    refs = [ref[0] for ref in refs]
 
     # Make sure correct collection was given for each resource, for example
     # URLs have implicit collections.
@@ -793,6 +791,40 @@ def AddStorageLocationFlag(parser, resource):
       {} content is to be stored. If absent, a nearby regional or
       multi-regional location is chosen automatically.
       """.format(resource))
+
+
+def AddShieldedInstanceInitialStateKeyArg(parser):
+  """Add the initial state for shielded instance arg."""
+  parser.add_argument(
+      '--platform-key-file',
+      help="""\
+      Single Platform Key file path used when booting up
+      shielded instance from this image.
+        """)
+  parser.add_argument(
+      '--key-exchange-key-file',
+      type=arg_parsers.ArgList(),
+      metavar='KEK_VALUE',
+      help="""\
+      List of key exchange key file paths used when booting up
+      shieled instance from this image.
+        """)
+  parser.add_argument(
+      '--signature-database-file',
+      type=arg_parsers.ArgList(),
+      metavar='DB_VALUE',
+      help="""\
+      List of valid public certificates file paths used when booting up
+      shieled instance from this image.
+        """)
+  parser.add_argument(
+      '--forbidden-database-file',
+      type=arg_parsers.ArgList(),
+      metavar='DBX_VALUE',
+      help="""\
+      List of revoked certificates file paths used when
+      booting up shieled instance from this image.
+        """)
 
 
 def RewriteFilter(args, message=None, frontend_fields=None):

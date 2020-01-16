@@ -113,6 +113,7 @@ class CreateGA(base.CreateCommand):
     flags.AddAffinityCookieTtl(parser)
     flags.AddConnectionDrainingTimeout(parser)
     flags.AddLoadBalancingScheme(parser)
+    flags.AddCustomRequestHeaders(parser, remove_all_flag=False)
     flags.AddCacheKeyIncludeProtocol(parser, default=True)
     flags.AddCacheKeyIncludeHost(parser, default=True)
     flags.AddCacheKeyIncludeQueryString(parser, default=True)
@@ -156,6 +157,8 @@ class CreateGA(base.CreateCommand):
               args.session_affinity))
     if args.session_affinity is not None:
       backend_service.affinityCookieTtlSec = args.affinity_cookie_ttl
+    if args.IsSpecified('custom_request_header'):
+      backend_service.customRequestHeaders = args.custom_request_header
 
     backend_services_utils.ApplyCdnPolicyArgs(
         client,
@@ -180,10 +183,16 @@ class CreateGA(base.CreateCommand):
       backend_service.connectionDraining = client.messages.ConnectionDraining(
           drainingTimeoutSec=args.connection_draining_timeout)
 
+    if args.IsSpecified('custom_request_header'):
+      backend_service.customRequestHeaders = args.custom_request_header
+
     if args.session_affinity is not None:
       backend_service.sessionAffinity = (
           client.messages.BackendService.SessionAffinityValueValuesEnum(
               args.session_affinity))
+
+    if args.port_name is not None:
+      backend_service.portName = args.port_name
 
     request = client.messages.ComputeRegionBackendServicesInsertRequest(
         backendService=backend_service,
@@ -283,7 +292,8 @@ class CreateAlpha(CreateGA):
     flags.AddSessionAffinity(parser)
     flags.AddAffinityCookieTtl(parser)
     flags.AddConnectionDrainingTimeout(parser)
-    flags.AddLoadBalancingScheme(parser, include_alpha=True)
+    flags.AddLoadBalancingScheme(
+        parser, include_l7_ilb=True, include_traffic_director=True)
     flags.AddCustomRequestHeaders(parser, remove_all_flag=False, default=False)
     signed_url_flags.AddSignedUrlCacheMaxAge(parser, required=False)
     flags.AddConnectionDrainOnFailover(parser, default=None)
@@ -378,6 +388,9 @@ class CreateAlpha(CreateGA):
           client.messages.BackendService.SessionAffinityValueValuesEnum(
               args.session_affinity))
 
+    if args.port_name is not None:
+      backend_service.portName = args.port_name
+
     request = client.messages.ComputeRegionBackendServicesInsertRequest(
         backendService=backend_service,
         region=backend_services_ref.region,
@@ -447,12 +460,16 @@ class CreateBeta(CreateGA):
     flags.AddSessionAffinity(parser)
     flags.AddAffinityCookieTtl(parser)
     flags.AddConnectionDrainingTimeout(parser)
-    flags.AddLoadBalancingScheme(parser)
+    flags.AddLoadBalancingScheme(
+        parser, include_l7_ilb=False, include_traffic_director=True)
     flags.AddCustomRequestHeaders(parser, remove_all_flag=False)
     flags.AddCacheKeyIncludeProtocol(parser, default=True)
     flags.AddCacheKeyIncludeHost(parser, default=True)
     flags.AddCacheKeyIncludeQueryString(parser, default=True)
     flags.AddCacheKeyQueryStringList(parser)
+    flags.AddConnectionDrainOnFailover(parser, default=None)
+    flags.AddDropTrafficIfUnhealthy(parser, default=None)
+    flags.AddFailoverRatio(parser)
     flags.AddEnableLogging(parser, default=None)
     flags.AddLoggingSampleRate(parser)
     signed_url_flags.AddSignedUrlCacheMaxAge(parser, required=False)
@@ -462,6 +479,12 @@ class CreateBeta(CreateGA):
     if args.load_balancing_scheme == 'INTERNAL':
       raise exceptions.ToolException(
           'Must specify --region for internal load balancer.')
+    if (args.connection_drain_on_failover is not None or
+        args.drop_traffic_if_unhealthy is not None or
+        args.failover_ratio is not None):
+      raise exceptions.InvalidArgumentException(
+          '--global',
+          'cannot specify failover policies for global backend services.')
     backend_service = self._CreateBackendService(holder, args,
                                                  backend_services_ref)
 
@@ -485,6 +508,11 @@ class CreateBeta(CreateGA):
         backend_service,
         is_update=False,
         apply_signed_url_cache_max_age=True)
+
+    if args.load_balancing_scheme != 'EXTERNAL':
+      backend_service.loadBalancingScheme = (
+          client.messages.BackendService.LoadBalancingSchemeValueValuesEnum(
+              args.load_balancing_scheme))
 
     self._ApplyIapArgs(client.messages, args.iap, backend_service)
 
@@ -513,11 +541,16 @@ class CreateBeta(CreateGA):
           drainingTimeoutSec=args.connection_draining_timeout)
     if args.IsSpecified('custom_request_header'):
       backend_service.customRequestHeaders = args.custom_request_header
+    backend_services_utils.ApplyFailoverPolicyArgs(client.messages, args,
+                                                   backend_service)
 
     if args.session_affinity is not None:
       backend_service.sessionAffinity = (
           client.messages.BackendService.SessionAffinityValueValuesEnum(
               args.session_affinity))
+
+    if args.port_name is not None:
+      backend_service.portName = args.port_name
 
     request = client.messages.ComputeRegionBackendServicesInsertRequest(
         backendService=backend_service,

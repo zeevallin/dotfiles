@@ -15,25 +15,35 @@ class Container(_messages.Message):
   r"""Data used to control Container related things in Edge service.
 
   Messages:
-    EnvironmentVariablesValue: The environment_variables key-value pairs will
-      be set as environment variable when the docker container is started.
+    EnvironmentVariablesValue: Required. The environment_variables key-value
+      pairs will be set as environment variable when the docker container is
+      started. Key cannot start with "X_GOOGLE_", and can not contain '='. Max
+      500 key-value pair. Max key/value length is 32768 bytes.
 
   Fields:
     autostart: If autostart is true, this container will be started right
-      after the edge config is deployed to device.
+      after the edge config is deployed to device. Default is true.
     availableMemoryMb: Maximum memory size assigned to the docker container,
-      in MB.
-    description: Description of the edge container.
+      in MB. Default value is 2048 if unspecified or equals to 0.
+    description: Description of the edge container. Max 8192 bytes.
     deviceBindings: List of device bindings.
-    dockerImageUri: URI that points to edge container in Google Container
-      Registry.
-    environmentVariables: The environment_variables key-value pairs will be
-      set as environment variable when the docker container is started.
+    dockerImageUri: Required. URI that points to edge container in Google
+      Container Registry. Max 8192 bytes.
+    environmentVariables: Required. The environment_variables key-value pairs
+      will be set as environment variable when the docker container is
+      started. Key cannot start with "X_GOOGLE_", and can not contain '='. Max
+      500 key-value pair. Max key/value length is 32768 bytes.
     inputTopics: List of input topics.
-    name: Name of edge container. It must be unique among the edge containers
-      running on the same edge device. For example, `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/containers/c1`.
+    name: Required. Name of edge container. It must be unique among the edge
+      containers running on the same edge device. For example,
+      `projects/p1/locations/us-
+      central1/registries/registry0/devices/dev0/containers/c1`. The last
+      token of the name (For example `c1`) should be no more than 256 bytes,
+      and should start with lowercase letter or a number, and can contain
+      lowercase alpha-numeric characters and following characters: .-_. More
+      strictly, it must match the regular expression [a-z0-9]+(?:._-+)*
     outputTopics: List of output topics.
+    portBindings: List of port bindings.
     updateTime: Output only. Last updated time of this container config. This
       is assigned by Edge Manager API.
     version: Output only. Version of this container config. This is assigned
@@ -43,8 +53,10 @@ class Container(_messages.Message):
 
   @encoding.MapUnrecognizedFields('additionalProperties')
   class EnvironmentVariablesValue(_messages.Message):
-    r"""The environment_variables key-value pairs will be set as environment
-    variable when the docker container is started.
+    r"""Required. The environment_variables key-value pairs will be set as
+    environment variable when the docker container is started. Key cannot
+    start with "X_GOOGLE_", and can not contain '='. Max 500 key-value pair.
+    Max key/value length is 32768 bytes.
 
     Messages:
       AdditionalProperty: An additional property for a
@@ -77,9 +89,10 @@ class Container(_messages.Message):
   inputTopics = _messages.MessageField('TopicInfo', 7, repeated=True)
   name = _messages.StringField(8)
   outputTopics = _messages.MessageField('TopicInfo', 9, repeated=True)
-  updateTime = _messages.StringField(10)
-  version = _messages.IntegerField(11)
-  volumeBindings = _messages.MessageField('VolumeBinding', 12, repeated=True)
+  portBindings = _messages.MessageField('PortBinding', 10, repeated=True)
+  updateTime = _messages.StringField(11)
+  version = _messages.IntegerField(12)
+  volumeBindings = _messages.MessageField('VolumeBinding', 13, repeated=True)
 
 
 class ContainerState(_messages.Message):
@@ -119,47 +132,23 @@ class ContainerState(_messages.Message):
   version = _messages.IntegerField(4)
 
 
-class DeployableFunction(_messages.Message):
-  r"""Indicates an edge function in Google Container Registry.
-
-  Fields:
-    container: Output only. Name of the container.
-    dockerImageUri: Output only. URI of the container.
-  """
-
-  container = _messages.StringField(1)
-  dockerImageUri = _messages.StringField(2)
-
-
 class DeviceBinding(_messages.Message):
   r"""Defines the rules to bind local(edge device) resources to sandboxed
   environment(edge function or container).
 
   Fields:
-    cgroupPermissions: cgroup permissions that will be given to the resource.
-    destination: Absolute path where the resource is bound in the function or
-      container.
-    source: Absolute path to the resource of the edge device to be bound.
+    cgroupPermissions: Required. cgroup permissions that will be given to the
+      resource. Should be a composition of r (read), w (write), and m (mknod).
+    destination: Required. Absolute path where the resource is bound in the
+      function or container. If empty, the value in 'source' field is used.
+      Should be valid POSIX path, and can contain up to 1024 bytes.
+    source: Required. Absolute path to the resource of the edge device to be
+      bound. Should be valid POSIX path, and can contain up to 1024 bytes.
   """
 
   cgroupPermissions = _messages.StringField(1)
   destination = _messages.StringField(2)
   source = _messages.StringField(3)
-
-
-class EdgeProjectsDeployableFunctionsListRequest(_messages.Message):
-  r"""A EdgeProjectsDeployableFunctionsListRequest object.
-
-  Fields:
-    pageSize: The standard list page size.
-    pageToken: Pagination token for next page of results.
-    parent: The project name. The list of deployable functions in given
-      project will be returned.
-  """
-
-  pageSize = _messages.IntegerField(1, variant=_messages.Variant.INT32)
-  pageToken = _messages.StringField(2)
-  parent = _messages.StringField(3, required=True)
 
 
 class EdgeProjectsLocationsRegistriesDevicesContainersCreateRequest(_messages.Message):
@@ -218,9 +207,14 @@ class EdgeProjectsLocationsRegistriesDevicesContainersPatchRequest(_messages.Mes
 
   Fields:
     container: A Container resource to be passed as the request body.
-    name: Name of edge container. It must be unique among the edge containers
-      running on the same edge device. For example, `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/containers/c1`.
+    name: Required. Name of edge container. It must be unique among the edge
+      containers running on the same edge device. For example,
+      `projects/p1/locations/us-
+      central1/registries/registry0/devices/dev0/containers/c1`. The last
+      token of the name (For example `c1`) should be no more than 256 bytes,
+      and should start with lowercase letter or a number, and can contain
+      lowercase alpha-numeric characters and following characters: .-_. More
+      strictly, it must match the regular expression [a-z0-9]+(?:._-+)*
     updateMask: Mask to control the fields to update. If empty, all fileds are
       updated.
   """
@@ -286,10 +280,14 @@ class EdgeProjectsLocationsRegistriesDevicesFunctionsPatchRequest(_messages.Mess
 
   Fields:
     function: A Function resource to be passed as the request body.
-    name: Name of the edge function. It must be unique among the edge
-      functions running on the same edge device. For example,
+    name: Required. Name of the edge function. It must be unique among the
+      edge functions running on the same edge device. For example,
       `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/functions/f1`.
+      central1/registries/registry0/devices/dev0/functions/f1`. The last token
+      of the name (For example `f1`) should be no more than 256 bytes, and
+      should start with lowercase letter or a number, and can contain
+      lowercase alpha-numeric characters and following characters: .-_. More
+      strictly, it must match the regular expression [a-z0-9]+(?:._-+)*
     updateMask: Mask to control the fields to update. If empty, all fileds are
       updated.
   """
@@ -395,9 +393,13 @@ class EdgeProjectsLocationsRegistriesDevicesMlModelsPatchRequest(_messages.Messa
 
   Fields:
     mlModel: A MlModel resource to be passed as the request body.
-    name: Name of the ML model. It must be unique among the ML models running
-      on the same edge device. For example, `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/mlModels/m1`.
+    name: Required. Name of the ML model. It must be unique among the ML
+      models running on the same edge device. For example,
+      `projects/p1/locations/us-
+      central1/registries/registry0/devices/dev0/mlModels/m1`. The last token
+      of the name (For example `m1`) should be no more than 256 bytes, and
+      should start with a letter followed by up to letters, numbers, hyphens
+      or underscores, and cannot end with a hyphen or an underscore.
     updateMask: Mask to control the fields to update. If empty, all fileds are
       updated.
   """
@@ -440,34 +442,47 @@ class Function(_messages.Message):
   r"""Data used to control Edge Function related things in Edge service.
 
   Enums:
-    FunctionTypeValueValuesEnum: Type of the function. A function may be
-      invoked when a message is published(on demand) or be running for stream
-      processing.
+    FunctionTypeValueValuesEnum: DEPRECATED: Specified function type will be
+      ignored. Function type should be specified when building a docker image
+      for the function. Type of the function. A function may be invoked when a
+      message is published(on demand) or be running for stream processing.
 
   Messages:
     EnvironmentVariablesValue: The environment_variables key-value pairs will
-      be set as environment variable when the docker container is started.
+      be set as environment variable when the docker container is started. Key
+      cannot start with "X_GOOGLE_", and can not contain '='. Max 500 key-
+      value pair. Max key/value length is 32768 bytes.
 
   Fields:
     availableMemoryMb: Maximum memory size assigned to the docker container,
-      in MB.
-    description: Description of the edge function.
+      in MB. Default value is 128 if unspecified or equals to 0.
+    description: Description of the edge function. Max 8192 bytes.
     deviceBindings: List of device bindings.
-    dockerImageUri: URI that points to edge function in Google Container
-      Registry.
+    dockerImageUri: Required. URI that points to edge function in Google
+      Container Registry. Max 8192 bytes.
     entryPoint: Name of the entry point function. The function will be called
       every time a message is published to one of the input_topics.
     environmentVariables: The environment_variables key-value pairs will be
-      set as environment variable when the docker container is started.
-    functionType: Type of the function. A function may be invoked when a
-      message is published(on demand) or be running for stream processing.
+      set as environment variable when the docker container is started. Key
+      cannot start with "X_GOOGLE_", and can not contain '='. Max 500 key-
+      value pair. Max key/value length is 32768 bytes.
+    functionType: DEPRECATED: Specified function type will be ignored.
+      Function type should be specified when building a docker image for the
+      function. Type of the function. A function may be invoked when a message
+      is published(on demand) or be running for stream processing.
     inputTopics: List of input topics.
-    name: Name of the edge function. It must be unique among the edge
-      functions running on the same edge device. For example,
+    name: Required. Name of the edge function. It must be unique among the
+      edge functions running on the same edge device. For example,
       `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/functions/f1`.
+      central1/registries/registry0/devices/dev0/functions/f1`. The last token
+      of the name (For example `f1`) should be no more than 256 bytes, and
+      should start with lowercase letter or a number, and can contain
+      lowercase alpha-numeric characters and following characters: .-_. More
+      strictly, it must match the regular expression [a-z0-9]+(?:._-+)*
     outputTopics: List of output topics.
-    requestTimeout: Timeout for one request to this edge function.
+    portBindings: List of port bindings.
+    requestTimeout: Timeout for one request to this edge function. Default
+      value is 1 minute if not specified or equals to 0.
     updateTime: Output only. Last updated time of this function config. This
       is assigned by Edge Manager API.
     version: Output only. Version number of this function config. This is
@@ -476,8 +491,10 @@ class Function(_messages.Message):
   """
 
   class FunctionTypeValueValuesEnum(_messages.Enum):
-    r"""Type of the function. A function may be invoked when a message is
-    published(on demand) or be running for stream processing.
+    r"""DEPRECATED: Specified function type will be ignored. Function type
+    should be specified when building a docker image for the function. Type of
+    the function. A function may be invoked when a message is published(on
+    demand) or be running for stream processing.
 
     Values:
       FUNCTION_TYPE_UNSPECIFIED: Default value, used when its value
@@ -494,7 +511,9 @@ class Function(_messages.Message):
   @encoding.MapUnrecognizedFields('additionalProperties')
   class EnvironmentVariablesValue(_messages.Message):
     r"""The environment_variables key-value pairs will be set as environment
-    variable when the docker container is started.
+    variable when the docker container is started. Key cannot start with
+    "X_GOOGLE_", and can not contain '='. Max 500 key-value pair. Max
+    key/value length is 32768 bytes.
 
     Messages:
       AdditionalProperty: An additional property for a
@@ -528,10 +547,11 @@ class Function(_messages.Message):
   inputTopics = _messages.MessageField('TopicInfo', 8, repeated=True)
   name = _messages.StringField(9)
   outputTopics = _messages.MessageField('TopicInfo', 10, repeated=True)
-  requestTimeout = _messages.StringField(11)
-  updateTime = _messages.StringField(12)
-  version = _messages.IntegerField(13)
-  volumeBindings = _messages.MessageField('VolumeBinding', 14, repeated=True)
+  portBindings = _messages.MessageField('PortBinding', 11, repeated=True)
+  requestTimeout = _messages.StringField(12)
+  updateTime = _messages.StringField(13)
+  version = _messages.IntegerField(14)
+  volumeBindings = _messages.MessageField('VolumeBinding', 15, repeated=True)
 
 
 class FunctionState(_messages.Message):
@@ -587,18 +607,6 @@ class ListContainersResponse(_messages.Message):
   nextPageToken = _messages.StringField(2)
 
 
-class ListDeployableFunctionsResponse(_messages.Message):
-  r"""Response for 'ListDeployableFunctions'.
-
-  Fields:
-    deployableFunctions: List of deployable functions.
-    nextPageToken: Pagination token for next page of results.
-  """
-
-  deployableFunctions = _messages.MessageField('DeployableFunction', 1, repeated=True)
-  nextPageToken = _messages.StringField(2)
-
-
 class ListFunctionsResponse(_messages.Message):
   r"""Response for 'ListFunctions'.
 
@@ -627,23 +635,31 @@ class MlModel(_messages.Message):
   r"""Data used to control MlModel related things in Edge service.
 
   Enums:
-    AcceleratorTypeValueValuesEnum: Type of device accelerator
-    FrameworkValueValuesEnum: Type of framework
+    AcceleratorTypeValueValuesEnum: Type of device accelerator.
+    FrameworkValueValuesEnum: Type of framework.
 
   Fields:
-    acceleratorType: Type of device accelerator
-    description: Description of the edge ml model.
-    framework: Type of framework
+    acceleratorType: Type of device accelerator.
+    description: Description of the edge ml model. Max 8192 bytes.
+    framework: Type of framework.
     inputTensors: List of input tensors.
     inputTopics: List of input topics.
-    modelUri: URI that points to ML model file of Google Cloud Storage.
-    name: Name of the ML model. It must be unique among the ML models running
-      on the same edge device. For example, `projects/p1/locations/us-
-      central1/registries/registry0/devices/dev0/mlModels/m1`.
+    modelUri: Required. URI that points to ML model file of Google Cloud
+      Storage. Max 8192 bytes.
+    name: Required. Name of the ML model. It must be unique among the ML
+      models running on the same edge device. For example,
+      `projects/p1/locations/us-
+      central1/registries/registry0/devices/dev0/mlModels/m1`. The last token
+      of the name (For example `m1`) should be no more than 256 bytes, and
+      should start with a letter followed by up to letters, numbers, hyphens
+      or underscores, and cannot end with a hyphen or an underscore.
     numTfliteThreads: Number of threads that are spawned by TF Lite.
     outputTensors: List of output tensors.
     outputTopics: List of output topics.
-    requestTimeout: Timeout for one request to this ML model.
+    requestTimeout: Timeout for one request to this ML model. Default value is
+      1 minute if not specified or equals to 0.
+    samplingInfo: Sampling information for sampling and uploading ML inference
+      results.
     updateTime: Output only. Last updated time of this ml model config. This
       is assigned by Edge Manager API.
     version: Output only. Version of this ML model config. This is assigned by
@@ -651,7 +667,7 @@ class MlModel(_messages.Message):
   """
 
   class AcceleratorTypeValueValuesEnum(_messages.Enum):
-    r"""Type of device accelerator
+    r"""Type of device accelerator.
 
     Values:
       ACCELERATOR_TYPE_UNSPECIFIED: Default value, used when its value
@@ -664,12 +680,12 @@ class MlModel(_messages.Message):
     GPU = 2
 
   class FrameworkValueValuesEnum(_messages.Enum):
-    r"""Type of framework
+    r"""Type of framework.
 
     Values:
       FRAMEWORK_UNSPECIFIED: Default value, used when its value unspecified.
-      TFLITE: TFlite framework
-      SCIKIT_LEARN: Scikit-learn framework
+      TFLITE: TFlite framework.
+      SCIKIT_LEARN: Scikit-learn framework.
     """
     FRAMEWORK_UNSPECIFIED = 0
     TFLITE = 1
@@ -686,8 +702,9 @@ class MlModel(_messages.Message):
   outputTensors = _messages.MessageField('TensorInfo', 9, repeated=True)
   outputTopics = _messages.MessageField('TopicInfo', 10, repeated=True)
   requestTimeout = _messages.StringField(11)
-  updateTime = _messages.StringField(12)
-  version = _messages.IntegerField(13)
+  samplingInfo = _messages.MessageField('MlSamplingInfo', 12)
+  updateTime = _messages.StringField(13)
+  version = _messages.IntegerField(14)
 
 
 class MlModelState(_messages.Message):
@@ -725,34 +742,159 @@ class MlModelState(_messages.Message):
   version = _messages.IntegerField(4)
 
 
+class MlSamplingInfo(_messages.Message):
+  r"""Data used to control retraining process of this MlModel.
+
+  Messages:
+    ClassPolicyValue: The policies to specify sampling strategy for each
+      class.
+
+  Fields:
+    classPolicy: The policies to specify sampling strategy for each class.
+    datasetName: Required. The dataset name used in AutoML. Can contain
+      alphabets, digits and underscores. Max 1024 bytes.
+    defaultPolicy: The default policy for all classes.
+    keepSampleMax: The number of maximum samples on local storage.
+      default=10000.
+    labelFileUri: Required. The dataset label text file uri. Must start with
+      'gs://' and can contain up to 8192 bytes.
+    tag: Required. tag for sampled data used for uploading. Can contain
+      alphabets, digits and underscores. Max 1024 bytes.
+    targetUri: Required. The target uri where the sampled data will be
+      located. Must start with 'gs:// and can contain up to 8192 bytes.
+  """
+
+  @encoding.MapUnrecognizedFields('additionalProperties')
+  class ClassPolicyValue(_messages.Message):
+    r"""The policies to specify sampling strategy for each class.
+
+    Messages:
+      AdditionalProperty: An additional property for a ClassPolicyValue
+        object.
+
+    Fields:
+      additionalProperties: Additional properties of type ClassPolicyValue
+    """
+
+    class AdditionalProperty(_messages.Message):
+      r"""An additional property for a ClassPolicyValue object.
+
+      Fields:
+        key: Name of the additional property.
+        value: A MlSamplingPolicy attribute.
+      """
+
+      key = _messages.StringField(1)
+      value = _messages.MessageField('MlSamplingPolicy', 2)
+
+    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+
+  classPolicy = _messages.MessageField('ClassPolicyValue', 1)
+  datasetName = _messages.StringField(2)
+  defaultPolicy = _messages.MessageField('MlSamplingPolicy', 3)
+  keepSampleMax = _messages.IntegerField(4, variant=_messages.Variant.INT32)
+  labelFileUri = _messages.StringField(5)
+  tag = _messages.StringField(6)
+  targetUri = _messages.StringField(7)
+
+
+class MlSamplingPolicy(_messages.Message):
+  r"""Data used to control the sampling process of the ML inference results.
+
+  Fields:
+    samplingRate: The default rate to sample a target data. default=0.1 for
+      10% sampling.
+    timeDelaySec: The time delay between sampling in sec. default=0 for 0 sec.
+  """
+
+  samplingRate = _messages.FloatField(1, variant=_messages.Variant.FLOAT)
+  timeDelaySec = _messages.IntegerField(2, variant=_messages.Variant.INT32)
+
+
+class PortBinding(_messages.Message):
+  r"""Defines the publish information of the docker container.
+
+  Enums:
+    ProtocolValueValuesEnum: Protocol for communication. TCP will be used if
+      not specified.
+
+  Fields:
+    containerPortEnd: Required. The ending number of container port mapping
+      range. Should be between 1-65535, and equals to or larger than
+      container_port_start.
+    containerPortStart: Required. The starting number of container port
+      mapping range. All the ports between container_port_start and
+      container_port_end will be published to host.  Should be between
+      1-65535.
+    hostIp: Should be ip address of host machine. For example, `127.0.0.1`. If
+      specified, host_port_start and host_port_end also should be specified.
+    hostPortEnd: The ending number of host port mapping range. Should be
+      between 1-65535. If specified, should be equals to or larger than
+      host_port_start. If not specified, host_port_start should not be
+      specified.
+    hostPortStart: The starting number of host port mapping range. Published
+      container ports will be mapped to the host ports in this range. If not
+      specified, host_port_end should not be specified, and container ports
+      will be mapped to randomly selected host ports. Should be between
+      1-65535.
+    protocol: Protocol for communication. TCP will be used if not specified.
+  """
+
+  class ProtocolValueValuesEnum(_messages.Enum):
+    r"""Protocol for communication. TCP will be used if not specified.
+
+    Values:
+      PROTOCOL_UNSPECIFIED: Default value, used when its value unspecified.
+      TCP: TCP. Edge runtime will use TCP if unspecified.
+      UDP: UDP
+      SCTP: SCTP
+    """
+    PROTOCOL_UNSPECIFIED = 0
+    TCP = 1
+    UDP = 2
+    SCTP = 3
+
+  containerPortEnd = _messages.IntegerField(1, variant=_messages.Variant.INT32)
+  containerPortStart = _messages.IntegerField(2, variant=_messages.Variant.INT32)
+  hostIp = _messages.StringField(3)
+  hostPortEnd = _messages.IntegerField(4, variant=_messages.Variant.INT32)
+  hostPortStart = _messages.IntegerField(5, variant=_messages.Variant.INT32)
+  protocol = _messages.EnumField('ProtocolValueValuesEnum', 6)
+
+
 class Rule(_messages.Message):
   r"""Defines rules between topics.
 
   Enums:
-    DestinationDomainValueValuesEnum: The destination of the messages to be
-      republished.
-    OperationValueValuesEnum: Indicates which action will be applied. If
-      FORWARD, the messages will be imported from cloud to edge or exported
-      from edge to cloud. If REWRITE, the messages will be republished within
-      the edge device with new topic name, that is defined in
-      `rewrite_topic_name`.
-    SourceDomainValueValuesEnum: The source of the messages to be rewritten.
+    DestinationDomainValueValuesEnum: Required. The destination of the
+      messages to be republished. Cannot be unspecified.
+    OperationValueValuesEnum: Required. Indicates which action will be
+      applied. If FORWARD, the messages will be imported from cloud to edge or
+      exported from edge to cloud. If REWRITE, the messages will be
+      republished within the edge device with new topic name, that is defined
+      in `rewrite_topic_name`. Cannot be unspecified.
+    SourceDomainValueValuesEnum: Required. The source of the messages to be
+      rewritten. Cannot be unspecified.
 
   Fields:
-    destinationDomain: The destination of the messages to be republished.
-    operation: Indicates which action will be applied. If FORWARD, the
-      messages will be imported from cloud to edge or exported from edge to
-      cloud. If REWRITE, the messages will be republished within the edge
+    destinationDomain: Required. The destination of the messages to be
+      republished. Cannot be unspecified.
+    operation: Required. Indicates which action will be applied. If FORWARD,
+      the messages will be imported from cloud to edge or exported from edge
+      to cloud. If REWRITE, the messages will be republished within the edge
       device with new topic name, that is defined in `rewrite_topic_name`.
+      Cannot be unspecified.
     rewriteTopicName: The new topic name to be rewritten if the operation is
-      REWRITE. Will be ignored if operation is FORWARD.
-    sourceDomain: The source of the messages to be rewritten.
-    sourceFilter: Indicates the topic filter of the messages to apply this
-      rule.
+      REWRITE. Will be ignored if operation is FORWARD. Max 1024 bytes.
+    sourceDomain: Required. The source of the messages to be rewritten. Cannot
+      be unspecified.
+    sourceFilter: Required. Indicates the topic filter of the messages to
+      apply this rule. Max 1024 bytes.
   """
 
   class DestinationDomainValueValuesEnum(_messages.Enum):
-    r"""The destination of the messages to be republished.
+    r"""Required. The destination of the messages to be republished. Cannot be
+    unspecified.
 
     Values:
       DOMAIN_UNSPECIFIED: Default value, used when its value unspecified.
@@ -764,10 +906,11 @@ class Rule(_messages.Message):
     EDGE = 2
 
   class OperationValueValuesEnum(_messages.Enum):
-    r"""Indicates which action will be applied. If FORWARD, the messages will
-    be imported from cloud to edge or exported from edge to cloud. If REWRITE,
-    the messages will be republished within the edge device with new topic
-    name, that is defined in `rewrite_topic_name`.
+    r"""Required. Indicates which action will be applied. If FORWARD, the
+    messages will be imported from cloud to edge or exported from edge to
+    cloud. If REWRITE, the messages will be republished within the edge device
+    with new topic name, that is defined in `rewrite_topic_name`. Cannot be
+    unspecified.
 
     Values:
       OPERATION_UNSPECIFIED: Default value, used when its value unspecified.
@@ -779,7 +922,8 @@ class Rule(_messages.Message):
     REWRITE = 2
 
   class SourceDomainValueValuesEnum(_messages.Enum):
-    r"""The source of the messages to be rewritten.
+    r"""Required. The source of the messages to be rewritten. Cannot be
+    unspecified.
 
     Values:
       DOMAIN_UNSPECIFIED: Default value, used when its value unspecified.
@@ -868,6 +1012,7 @@ class SystemState(_messages.Message):
 
   Fields:
     cpuArch: CPU architecture, For example, `x86_64` or `armv7`.
+    runtimeVersion: Version of Edge Runtime.
     totalMemoryMb: Number of total memory of the device in MB.
     tpuInterfaces: Host TPU interfaces.
   """
@@ -885,25 +1030,27 @@ class SystemState(_messages.Message):
     USB = 2
 
   cpuArch = _messages.StringField(1)
-  totalMemoryMb = _messages.IntegerField(2, variant=_messages.Variant.INT32)
-  tpuInterfaces = _messages.EnumField('TpuInterfacesValueListEntryValuesEnum', 3, repeated=True)
+  runtimeVersion = _messages.StringField(2)
+  totalMemoryMb = _messages.IntegerField(3, variant=_messages.Variant.INT32)
+  tpuInterfaces = _messages.EnumField('TpuInterfacesValueListEntryValuesEnum', 4, repeated=True)
 
 
 class TensorInfo(_messages.Message):
   r"""Indicates the info of input or output tensors of ML models.
 
   Enums:
-    InferenceTypeValueValuesEnum: Type of the tensor.
+    InferenceTypeValueValuesEnum: Required. Type of the tensor. Cannot be
+      unspecified.
 
   Fields:
-    dimensions: Dimension description of the tensor.
-    index: Index of the tensor in the input or output layer.
-    inferenceType: Type of the tensor.
-    tensorName: Name of the tensor.
+    dimensions: Required. Dimension description of the tensor.
+    index: Required. Index of the tensor in the input or output layer.
+    inferenceType: Required. Type of the tensor. Cannot be unspecified.
+    tensorName: Required. Name of the tensor. Can contain up to 1024 bytes.
   """
 
   class InferenceTypeValueValuesEnum(_messages.Enum):
-    r"""Type of the tensor.
+    r"""Required. Type of the tensor. Cannot be unspecified.
 
     Values:
       ML_INFERENCE_TYPE_UNSPECIFIED: Default value, used when its value
@@ -927,8 +1074,10 @@ class TopicBridgingTable(_messages.Message):
   the same message with new topic name within the edge device.
 
   Fields:
-    name: The name of the topic bridging table resource.
-    rules: List of topic bridging rules.
+    name: Required. The name of the topic bridging table resource. Should be
+      identical with the name of the device. For example,
+      `projects/p1/locations/us-central1/registries/registry0/devices/dev0`.
+    rules: Required. List of topic bridging rules.
     version: Output only. Version of this topic bridging table. This is
       assigned by Edge Manager API.
   """
@@ -943,8 +1092,13 @@ class TopicInfo(_messages.Message):
   names used in edge functions or containers.
 
   Fields:
-    id: Optional name associated with this topic.
-    topic: The actual topic string.
+    id: Optional name associated with this topic. Can contain alpha-numeric
+      characters, hyphen and underscore only. Max 1024 bytes. Specifically
+      must match with following regular expression: [a-zA-Z0-9-_]+
+    topic: Required. The actual topic string. Should not have mqtt wildcard
+      characters(+#), comma and colon. Cannot start with dollar sign.
+      Specifically must match with following regular expression:
+      [^$+#,:]+[^+#,:]* Max 1024 bytes.
   """
 
   id = _messages.StringField(1)
@@ -970,9 +1124,12 @@ class VolumeBinding(_messages.Message):
 
   Fields:
     destination: Absolute path where the resource is bound in the function or
-      container.
-    readOnly: If true, sandboxed environment only can read the path.
-    source: Absolute path to the resource of the edge device to be bound.
+      container. If empty, the value in 'source' field is used. Should be
+      valid POSIX path, and can contain up to 1024 bytes.
+    readOnly: If true, sandboxed environment only can read the path. Default
+      is false.
+    source: Required. Absolute path to the resource of the edge device to be
+      bound. Should be valid POSIX path, and can contain up to 1024 bytes.
   """
 
   destination = _messages.StringField(1)

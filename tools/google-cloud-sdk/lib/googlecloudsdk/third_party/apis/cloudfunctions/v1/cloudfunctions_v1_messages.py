@@ -84,10 +84,10 @@ class Binding(_messages.Message):
   r"""Associates `members` with a `role`.
 
   Fields:
-    condition: Unimplemented. The condition that is associated with this
-      binding. NOTE: an unsatisfied condition will not allow user access via
-      current binding. Different bindings, including their conditions, are
-      examined independently.
+    condition: The condition that is associated with this binding. NOTE: An
+      unsatisfied condition will not allow user access via current binding.
+      Different bindings, including their conditions, are examined
+      independently.
     members: Specifies the identities requesting access for a Cloud Platform
       resource. `members` can have the following values:  * `allUsers`: A
       special identifier that represents anyone who is    on the internet;
@@ -99,8 +99,8 @@ class Binding(_messages.Message):
       service    account. For example, `my-other-
       app@appspot.gserviceaccount.com`.  * `group:{emailid}`: An email address
       that represents a Google group.    For example, `admins@example.com`.
-      * `domain:{domain}`: A Google Apps domain name that represents all the
-      users of that domain. For example, `google.com` or `example.com`.
+      * `domain:{domain}`: The G Suite domain (primary) that represents all
+      the    users of that domain. For example, `google.com` or `example.com`.
     role: Role that is assigned to `members`. For example, `roles/viewer`,
       `roles/editor`, or `roles/owner`.
   """
@@ -168,8 +168,7 @@ class CloudFunction(_messages.Message):
       URL.
     labels: Labels associated with this Cloud Function.
     maxInstances: The limit on the maximum number of function instances that
-      may coexist at a given time. This feature is currently in alpha,
-      available only for whitelisted users.
+      may coexist at a given time.
     name: A user-defined name of the function. Function names must be unique
       globally and match pattern `projects/*/locations/*/functions/*`
     network: The VPC Network that this cloud function can connect to. It can
@@ -184,8 +183,9 @@ class CloudFunction(_messages.Message):
       documentation](https://cloud.google.com/compute/docs/vpc) for more
       information on connecting Cloud projects.  This feature is currently in
       alpha, available only for whitelisted users.
-    runtime: The runtime in which the function is going to run. If empty,
-      defaults to Node.js 6.
+    runtime: Required. The runtime in which the function is going to run.
+      Choices:  * `nodejs6`: Node.js 6 * `nodejs8`: Node.js 8 * `nodejs10`:
+      Node.js 10 * `python37`: Python 3.7 * `go111`: Go 1.11
     serviceAccountEmail: The email of the function's service account. If
       empty, defaults to {project_id}@appspot.gserviceaccount.com.
     sourceArchiveUrl: The Google Cloud Storage URL, starting with gs://,

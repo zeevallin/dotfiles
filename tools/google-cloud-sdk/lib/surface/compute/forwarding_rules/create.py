@@ -35,14 +35,13 @@ from six.moves import range  # pylint: disable=redefined-builtin
 def _Args(parser,
           include_beta,
           include_alpha=False,
-          support_flex_port=False,
           support_global_access=False):
   """Argument parsing."""
   flags.AddUpdateArgs(parser, include_beta=include_beta,
                       include_alpha=include_alpha)
   flags.AddIPProtocols(parser)
   flags.AddDescription(parser)
-  flags.AddPortsAndPortRange(parser, supports_flex_port=support_flex_port)
+  flags.AddPortsAndPortRange(parser)
   flags.AddNetworkTier(
       parser, supports_network_tier_flag=True, for_update=False)
 
@@ -64,9 +63,8 @@ class Create(base.CreateCommand):
   """Create a forwarding rule to direct network traffic to a load balancer."""
 
   FORWARDING_RULE_ARG = None
-  _support_flex_port = False
   _support_global_access = False
-  _support_network_in_global_request = False
+  _support_traffic_director = False
 
   @classmethod
   def Args(cls, parser):
@@ -75,7 +73,6 @@ class Create(base.CreateCommand):
         parser,
         include_beta=False,
         include_alpha=False,
-        support_flex_port=cls._support_flex_port,
         support_global_access=cls._support_global_access)
     flags.AddAddressesAndIPVersions(parser, required=False)
     cls.FORWARDING_RULE_ARG.AddArgument(parser, operation_type='create')
@@ -127,7 +124,7 @@ class Create(base.CreateCommand):
     target_ref = utils.GetGlobalTarget(
         resources,
         args,
-        include_alpha=(self.ReleaseTrack() == base.ReleaseTrack.ALPHA))
+        include_traffic_director=self._support_traffic_director)
     protocol = self.ConstructProtocol(client.messages, args)
 
     if args.address is None or args.ip_version:
@@ -151,7 +148,7 @@ class Create(base.CreateCommand):
         networkTier=_ConstructNetworkTier(client.messages, args),
         loadBalancingScheme=_GetLoadBalancingScheme(args, client.messages))
 
-    if self._support_network_in_global_request and args.network is not None:
+    if args.network is not None:
       forwarding_rule.network = flags.NETWORK_ARG_ALPHA.ResolveAsResource(
           args, resources).SelfLink()
 
@@ -289,9 +286,8 @@ class Create(base.CreateCommand):
 @base.ReleaseTracks(base.ReleaseTrack.BETA)
 class CreateBeta(Create):
   """Create a forwarding rule to direct network traffic to a load balancer."""
-  _support_flex_port = True
   _support_global_access = False
-  _support_network_in_global_request = False
+  _support_traffic_director = True
 
   @classmethod
   def Args(cls, parser):
@@ -300,9 +296,8 @@ class CreateBeta(Create):
         parser,
         include_beta=True,
         include_alpha=False,
-        support_flex_port=cls._support_flex_port,
         support_global_access=cls._support_global_access)
-    flags.AddAddressesAndIPVersions(parser, required=False)
+    flags.AddAddressesAndIPVersions(parser, required=False, include_beta=True)
     cls.FORWARDING_RULE_ARG.AddArgument(parser, operation_type='create')
     parser.display_info.AddCacheUpdater(flags.ForwardingRulesCompleter)
 
@@ -313,9 +308,8 @@ class CreateBeta(Create):
 @base.ReleaseTracks(base.ReleaseTrack.ALPHA)
 class CreateAlpha(CreateBeta):
   """Create a forwarding rule to direct network traffic to a load balancer."""
-  _support_flex_port = True
   _support_global_access = True
-  _support_network_in_global_request = True
+  _support_traffic_director = True
 
   @classmethod
   def Args(cls, parser):
@@ -324,9 +318,9 @@ class CreateAlpha(CreateBeta):
         parser,
         include_beta=True,
         include_alpha=True,
-        support_flex_port=cls._support_flex_port,
         support_global_access=cls._support_global_access)
-    flags.AddAddressesAndIPVersions(parser, required=False, include_alpha=True)
+    flags.AddAddressesAndIPVersions(
+        parser, required=False, include_beta=True, include_alpha=True)
     cls.FORWARDING_RULE_ARG.AddArgument(parser, operation_type='create')
     parser.display_info.AddCacheUpdater(flags.ForwardingRulesCompleter)
 
