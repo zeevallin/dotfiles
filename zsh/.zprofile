@@ -79,3 +79,7 @@ export GPG_TTY=`tty`
 # lush
 export LUSH_ROOT="$HOME/go/src/gitlab.com/LUSHDigital/soa"
 export LUSH_SERVICE_IMAGE="eu.gcr.io/utilities-prod-europe-west2/soa/dev-ops/microservice-bootstrap:latest"
+
+# LUSHDigital/core
+export JWT_PUBLIC_KEY_PATH="$HOME/.secrets/jwt.public.pem"
+export JWT_PRIVATE_KEY_PATH="$HOME/.secrets/jwt.private_unencrypted.pem"
