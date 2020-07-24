@@ -378,7 +378,7 @@ class ExportResourcesRequest(_messages.Message):
       changes to the output schema may be introduced in the future as a result
       of continuous collaboration with the FHIR community to refine the
       [desired SQL projection of FHIR resources](https://github.com/rbrush
-      /sql-on-fhir/blob/master/sql-on-fhir.md).
+      /sql-on-fhir/blob/main/sql-on-fhir.md).
     gcsDestination: The Cloud Storage output destination.  The Cloud Storage
       location requires the `roles/storage.objectAdmin` Cloud IAM role.  The
       exported outputs are organized by FHIR resource types. The server will
