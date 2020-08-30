@@ -29,6 +29,12 @@ else
   echo "[x] go not installed"
 fi
 
+# node
+path=(
+  "./node_modules/.bin"
+  $path
+)
+
 # gctl
 if [ $(which gctl) ] && [ -x $(which gctl) ]; then
   gctl gen-zsh-completion > ~/.zshfuncs/_gctl

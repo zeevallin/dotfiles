@@ -1,0 +1,99 @@
+{
+	"name": "vscode-scss-formatter",
+	"displayName": "SCSS Formatter",
+	"description": "A Visual Studio Code Extension to format SCSS",
+	"version": "2.0.1",
+	"publisher": "sibiraj-s",
+	"licence": "MIT",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sibiraj-s/vscode-scss-formatter.git"
+	},
+	"bugs": "https://github.com/sibiraj-s/vscode-scss-formatter/issues",
+	"homepage": "https://marketplace.visualstudio.com/items?itemName=sibiraj-s.vscode-scss-formatter",
+	"engines": {
+		"node": ">=12",
+		"vscode": "^1.43.0"
+	},
+	"icon": "assets/sass.png",
+	"categories": [
+		"Formatters"
+	],
+	"activationEvents": [
+		"onCommand:scss-formatter.activate",
+		"onCommand:scss-formatter.show-output",
+		"onCommand:scss-formatter.clear-output",
+		"onLanguage:css",
+		"onLanguage:scss"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"commands": [
+			{
+				"command": "scss-formatter.activate",
+				"title": "Activate",
+				"category": "SCSS Formatter"
+			},
+			{
+				"command": "scss-formatter.show-output",
+				"title": "Show Output",
+				"category": "SCSS Formatter"
+			},
+			{
+				"command": "scss-formatter.clear-output",
+				"title": "Clear Output",
+				"category": "SCSS Formatter"
+			}
+		],
+		"configuration": [
+			{
+				"type": "object",
+				"title": "SCSS Formatter",
+				"properties": {
+					"scssFormatter.printWidth": {
+						"type": "number",
+						"default": 120,
+						"description": "Specify the line length that the formatter will wrap on"
+					},
+					"scssFormatter.singleQuote": {
+						"type": "boolean",
+						"default": false,
+						"description": "Use single quotes instead of double quotes."
+					}
+				}
+			}
+		]
+	},
+	"scripts": {
+		"compile": "tsc -p ./",
+		"lint": "eslint . --ext ts --ignore-path .gitignore",
+		"pretest": "npm run lint && npm run compile",
+		"test": "node ./out/test/runTest.js",
+		"vscode:prepublish": "npm run compile",
+		"watch": "tsc -watch -p ./"
+	},
+	"dependencies": {
+		"prettier": "^2.0.5"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^7.0.2",
+		"@types/node": "^13.9.5",
+		"@types/prettier": "^2.0.0",
+		"@types/vscode": "^1.43.0",
+		"@typescript-eslint/eslint-plugin": "^2.25.0",
+		"@typescript-eslint/parser": "^2.25.0",
+		"eslint": "^6.8.0",
+		"glob": "^7.1.6",
+		"husky": "^4.2.5",
+		"mocha": "^7.1.1",
+		"typescript": "^3.8.3",
+		"vscode-test": "^1.3.0"
+	},
+	"__metadata": {
+		"id": "01708053-6fab-403f-9787-9d5f3d8f7d6a",
+		"publisherId": "370e6924-7ae5-4a40-8bb0-af2f6fec7ebf",
+		"publisherDisplayName": "Sibiraj"
+	}
+}

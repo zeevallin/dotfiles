@@ -1,0 +1,69 @@
+{
+	"name": "vscode-lua-format",
+	"displayName": "vscode-lua-format",
+	"description": "Reformats your Lua source code.",
+	"version": "1.3.5",
+	"homepage": "https://github.com/Koihik/LuaFormatter",
+	"icon": "lua-logo.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Koihik/vscode-lua-format.git"
+	},
+	"keywords": [
+		"Lua",
+		"format",
+		"beautifier",
+		"pretty printer"
+	],
+	"bugs": {
+		"url": "https://github.com/Koihik/LuaFormatter/issues"
+	},
+	"license": "Apache License Version 2.0",
+	"publisher": "Koihik",
+	"engines": {
+		"vscode": "^1.32.0"
+	},
+	"categories": [
+		"Formatters"
+	],
+	"activationEvents": [
+		"onLanguage:lua"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"configuration": {
+			"title": "vscode-lua-format configuration",
+			"properties": {
+				"vscode-lua-format.configPath": {
+					"type": "string",
+					"default": "",
+					"description": "Specifies the style config file."
+				},
+				"vscode-lua-format.binaryPath": {
+					"type": "string",
+					"default": "",
+					"description": "Specifies alternative lua-format binary path."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"lint": "eslint . --ext .ts,.tsx"
+	},
+	"devDependencies": {
+		"@types/node": "^12.12.0",
+		"@typescript-eslint/eslint-plugin": "^3.0.2",
+		"@typescript-eslint/parser": "^3.0.2",
+		"eslint": "^7.1.0",
+		"typescript": "^3.9.3",
+		"@types/vscode": "^1.32.0"
+	},
+	"__metadata": {
+		"id": "e16d817c-eb8b-462b-86c5-fe97ff51875c",
+		"publisherId": "e5143899-1cbf-4081-a543-9d5398a42ca5",
+		"publisherDisplayName": "Koihik"
+	}
+}
