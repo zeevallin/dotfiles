@@ -45,3 +45,6 @@ alias markdown=md
 killport () { lsof -i :$1 | sed 1d | awk '{print $2}' | xargs kill -9 }
 
 secret () { $DEVELOP $HOME/.secret }
+
+# tower
+tower () { /Applications/Tower.app/Contents/MacOS/gittower $@ }
