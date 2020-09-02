@@ -1,88 +1,25 @@
 {
-    // Global configuration.
     "window.zoomLevel": 0,
     "editor.rulers": [
         80
     ],
-
-    // File syntax highlighting associations.
-    "files.associations": {
-        "*.yml": "yaml",
-        "*.env": "dotenv",
-        "*.env*": "dotenv",
-        "*.sql": "sql",
-        "*.mysql": "mysql",
-        "*.mysql.sql": "mysql",
-        "*.pg": "postgres",
-        "*.pg.sql": "postgres",
-        "*.postgres": "postgres",
-        "*.postgres.sql": "postgres",
-        "*.cockroach": "postgres",
-        "*.cockroach.sql": "postgres"
-    },
-
-    // Go configuration using the gopls language server.
-    "[go]": {
-        "editor.snippetSuggestions": "none", // For use with language server
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true,
-            "source.fixAll": true,
-        },
-        "editor.defaultFormatter": "golang.Go",
-    },
-    "go.autocompleteUnimportedPackages": false,
-
-    // Configuration for `go build`
-    "go.buildOnSave": "off", // For use with language server
+    "go.autocompleteUnimportedPackages": true,
+    "go.buildOnSave": "package",
+    "go.lintOnSave": "package",
+    "go.vetOnSave": "package",
     "go.buildTags": "",
     "go.buildFlags": [],
-
-    // Configuration for `golint`
-    "go.lintOnSave": "package",
     "go.lintTool": "golint",
-    "go.lintFlags": [
-        "-min_confidence=0.80"
-    ],
-
-    // Configuration for `go vet`
-    "go.vetOnSave": "off", // for use with language server
-    "go.vetFlags": [
-
-    ],
-
-    // Configuration for `go test`
+    "go.lintFlags": [],
+    "go.vetFlags": [],
     "go.coverOnSave": false,
-    "go.testOnSave": false,
-    "go.coverOnSingleTest": true,
-    "go.coverOnTestPackage": true,
-    "go.coverOnSingleTestFile": true,
-
     "go.useCodeSnippetsOnFunctionSuggest": true,
-    "go.useCodeSnippetsOnFunctionSuggestWithoutType": true,
-
+    "go.formatTool": "goimports",
+    "go.formatFlags": [],
     "go.goroot": "/usr/local/opt/go/libexec",
     "go.gopath": "/usr/local/go",
-    // "go.toolsGopath": "/usr/local/gotools",
-    "go.useLanguageServer": true,
-    "go.languageServerFlags": [
-        "-rpc.trace",
-        "-logfile=/Users/philipvieira/gopls.log",
-    ],
-    "go.languageServerExperimentalFeatures": {
-        "format": true,
-        "autoComplete": true,
-        "diagnostics": true,
-        "goToDefinition": true,
-        "goToTypeDefinition": true,
-        "hover": true,
-        "signatureHelp": true,
-        "documentSymbols": true,
-        "rename": true,
-        "findReferences": true,
-        "workspaceSymbols": true,
-        "documentLink": true,
-    },
+    "go.toolsGopath": "/usr/local/gotools",
+    "go.gocodeAutoBuild": false,
     "go.editorContextMenuCommands": {
         "toggleTestFile": false,
         "addTags": false,
@@ -93,99 +30,31 @@
         "generateTestForFunction": false,
         "generateTestForFile": false,
         "generateTestForPackage": false,
-        "addImport": false,
+        "addImport": true,
         "testCoverage": false,
-        "playground": false,
-        "fillStruct": false,
-        "debugTestAtCursor": false,
+        "playground": false
     },
-
-    "scss.lint.unknownAtRules": "ignore",
-
-    "yaml.completion": false,
-    "yaml.validate": false,
-    "editor.multiCursorModifier": "ctrlCmd",
-    "[yaml]": {
+    "[go]": {
         "editor.formatOnSave": true,
+    },
+    "files.associations": {
+        "*.sql": "sql",
+        "*.mysql": "sql",
+        "*.postgresql": "postgres",
+        ".env.prod": "dotenv",
+        "*.postgres": "postgres",
+        "hosts": "ansible-advanced",
+        "*.yml": "yaml",
+        "production": "ansible-advanced"
+    },
+    "editor.multiCursorModifier": "ctrlCmd",
+    "[ansible-advanced]": {
+        "editor.tabSize": 2
+    },
+    "yaml.format.enable": true,
+    "[yaml]": {
         "editor.insertSpaces": true,
         "editor.tabSize": 2,
-        "editor.autoIndent": "advanced",
-        "editor.trimAutoWhitespace": true,
+        "editor.autoIndent": true
     },
-    "files.eol": "\n",
-    "vs-kubernetes": {
-        "vs-kubernetes.minikube-path": "/Users/philipvieira/.vs-kubernetes/tools/minikube/darwin-amd64/minikube",
-        "vs-kubernetes.minikube-path.mac": "/Users/philipvieira/.vs-kubernetes/tools/minikube/darwin-amd64/minikube"
-    },
-    "[json]": {
-        "editor.formatOnSave": true,
-    },
-    "[plaintext]": {},
-    "jsonnet.libPaths": [
-        "/Users/philipvieira/Code/gitlab.com/LUSHDigital/devops/grafonnet"
-    ],
-    "cSpell.userWords": [
-        "Algolia",
-        "Cerys",
-        "Cmdable",
-        "Fursuit",
-        "IBAN",
-        "INCI",
-        "MINIO",
-        "Organisation",
-        "Pauffley",
-        "Protos",
-        "UKEUR",
-        "UUID",
-        "UUIDs",
-        "Unretrievable",
-        "VATID",
-        "Vieira",
-        "Vuex",
-        "cloudinary",
-        "cockroachdb",
-        "crdb",
-        "deps",
-        "devtool",
-        "ftof",
-        "gogetenv",
-        "gonum",
-        "goroutine's",
-        "grpc",
-        "grpcsrv",
-        "httpsrv",
-        "iname",
-        "internationalised",
-        "itof",
-        "jwtl",
-        "keybroker",
-        "lushauthmw",
-        "magefile",
-        "metricsmw",
-        "metricsrv",
-        "microservice",
-        "middlewares",
-        "newf",
-        "noinline",
-        "nolog",
-        "notoken",
-        "paginationmw",
-        "postgres",
-        "preq",
-        "proto",
-        "protobuf",
-        "protobuffers",
-        "ptype",
-        "readysrv",
-        "remotefs",
-        "sanitise",
-        "strapline",
-        "struct",
-        "submodule",
-        "tracingmw",
-        "truncator",
-        "unmarshalling",
-        "unrecognised"
-    ],
-    "typescript.updateImportsOnFileMove.enabled": "always",
 }
