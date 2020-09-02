@@ -14,7 +14,7 @@ fi
 # go
 if [ $(which go) ] && [ -x $(which go) ]; then
   if [[ "$OSTYPE" == darwin* ]]; then
-    export GOPATH=/usr/local/go:$HOME/go
+    export GOPATH=/usr/local/go
     export GOBIN=/usr/local/go/bin
     export GOTOOLSBIN=/usr/local/gotools/bin
     path=(
