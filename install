@@ -51,6 +51,7 @@ while read line; do
 
 		# create link
 		ln -sfF $src $dest
+
 		echo "$src -> $dest"
 	fi
 done < $LINKS
