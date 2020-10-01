@@ -21,31 +21,3 @@ for package in ${packages[@]}; do
 			brew install ${package}
 		fi
 done
-
-if [ -x "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" ]; then
-	echo "[√] setting up Visual Studio Code executable"
-	ln -f -s "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" /usr/local/bin/code
-else
-	echo "[x] Visual Studio Code is not installed..."
-fi
-
-if [ -x "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" ]; then
-	echo "[√] setting up Sublime Text 2 executable"
-	ln -f -s "/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl2
-else
-	echo "[x] Sublime Text 2 is not installed..."
-fi
-
-if [ -x "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ]; then
-	echo "[√] setting up Sublime Text 3 executable"
-	ln -f -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
-else
-	echo "[x] Sublime Text 3 is not installed..."
-fi
-
-if [ -x "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ]; then
-	echo "[√] setting up Sublime Text 3 executable"
-	ln -f -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
-else
-	echo "[x] Sublime Text 3 is not installed..."
-fi
