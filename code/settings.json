@@ -149,6 +149,7 @@
         "itof",
         "jwtl",
         "keybroker",
+        "kubernetes",
         "lushauthmw",
         "magefile",
         "metricsmw",
